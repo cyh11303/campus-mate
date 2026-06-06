@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>밥약 신청 · 캠퍼스 메이트</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5B6EF5;
+            --green: #22C55E;
+            --green-light: #DCFCE7;
+            --green-dark: #15803D;
+            --amber: #F59E0B;
+            --amber-light: #FEF3C7;
+            --red: #EF4444;
+            --red-light: #FEE2E2;
+            --bg: #F5F6FA;
+            --card: #FFFFFF;
+            --text: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+        /* ── 네비바 ── */
+        .navbar {
+            width: 100%; background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.25rem; height: 54px;
+            display: flex; align-items: center; gap: 10px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-btn {
+            width: 32px; height: 32px; border-radius: 10px;
+            background: var(--bg); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--text-sub); font-size: 1rem;
+            transition: all 0.15s; flex-shrink: 0;
+        }
+        .back-btn:hover { background: var(--border); }
+        .nav-title { font-size: 1rem; font-weight: 800; color: var(--text); }
+
+        /* ── 탭 ── */
+        .tab-bar {
+            display: flex; gap: 0; margin-left: auto;
+            background: var(--bg); border-radius: 10px;
+            padding: 3px; border: 1px solid var(--border);
+        }
+        .tab-btn {
+            padding: 5px 14px; border-radius: 8px; border: none;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            font-family: 'Pretendard', sans-serif; color: var(--text-sub);
+            background: none; transition: all 0.15s; white-space: nowrap;
+        }
+        .tab-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .tab-btn.active.green { color: var(--green-dark); }
+        .tab-btn.active.amber { color: #92400E; }
+
+        /* ── 본문 ── */
+        .wrap { width: 100%; max-width: 680px; padding: 1.25rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1rem; }
+
+        /* ── 탭 패널 ── */
+        .panel { display: none; flex-direction: column; gap: 1rem; }
+        .panel.active { display: flex; animation: fadeUp 0.2s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+        /* ── 히어로 ── */
+        .hero-banner {
+            border-radius: 22px; padding: 1.5rem; color: white;
+            position: relative; overflow: hidden;
+        }
+        .hero-banner.green { background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%); }
+        .hero-banner.amber { background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%); }
+        .hero-banner .b1 { position:absolute; width:120px; height:120px; background:rgba(255,255,255,0.08); border-radius:50%; top:-30px; right:-20px; }
+        .hero-banner .b2 { position:absolute; width:60px; height:60px; background:rgba(255,255,255,0.05); border-radius:50%; bottom:-10px; right:60px; }
+        .hero-icon { font-size: 2rem; margin-bottom: 0.5rem; position:relative; z-index:1; }
+        .hero-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; position:relative; z-index:1; letter-spacing:-0.5px; }
+        .hero-desc { font-size: 0.82rem; opacity: 0.85; position:relative; z-index:1; }
+
+        /* ── 공통 ── */
+        .section-label { font-size: 0.7rem; font-weight: 700; color: var(--text-sub); letter-spacing: 0.1em; text-transform: uppercase; }
+        .form-card { background: var(--card); border-radius: 20px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-label { font-size: 0.72rem; font-weight: 700; color: var(--text-sub); letter-spacing: 0.04em; }
+        .input-field {
+            width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+            font-size: 0.92rem; font-family: 'Pretendard', sans-serif; color: var(--text);
+            background: var(--bg); outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .input-field::placeholder { color: #C4C9D4; }
+        .input-field.green:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.12); background: white; }
+        .input-field.amber:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.12); background: white; }
+
+        .toast { display:none; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; font-size:0.82rem; font-weight:600; }
+        .toast.ok  { display:flex; background:#F0FDF4; border:1px solid #BBF7D0; color:#15803D; }
+        .toast.err { display:flex; background:var(--red-light); border:1px solid #FECACA; color:var(--red); }
+
+        .action-btn {
+            width: 100%; padding: 13px; border: none; border-radius: 14px;
+            font-size: 0.95rem; font-weight: 800; cursor: pointer; color: white;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.15s; font-family: 'Pretendard', sans-serif;
+        }
+        .action-btn.green { background: var(--green); }
+        .action-btn.green:hover { background: #16A34A; transform:translateY(-1px); box-shadow:0 4px 12px rgba(34,197,94,0.3); }
+        .action-btn.amber { background: var(--amber); }
+        .action-btn.amber:hover { background: #D97706; transform:translateY(-1px); box-shadow:0 4px 12px rgba(245,158,11,0.3); }
+        .action-btn:disabled { background: var(--border); color: var(--text-sub); cursor:not-allowed; transform:none; box-shadow:none; }
+
+        /* ── 신청자 목록 ── */
+        .list-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+        .count-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+        .count-badge.green { background:var(--green-light); color:var(--green-dark); }
+        .count-badge.amber { background:var(--amber-light); color:#92400E; }
+        .refresh-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; color:var(--text-sub); cursor:pointer; font-family:'Pretendard',sans-serif; transition:all 0.15s; }
+        .refresh-btn:hover { background:var(--bg); color:var(--text); }
+
+        .applicant-list { background:var(--card); border-radius:20px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+        .empty-state { padding:2.5rem 1rem; text-align:center; color:var(--text-sub); font-size:0.85rem; display:flex; flex-direction:column; align-items:center; gap:8px; }
+        .empty-state .empty-icon { font-size:2rem; }
+        .applicant-item { display:flex; align-items:center; gap:0.9rem; padding:0.9rem 1.25rem; border-bottom:1px solid var(--border); transition:background 0.12s; }
+        .applicant-item:last-child { border-bottom:none; }
+        .applicant-item:hover { background:var(--bg); }
+        .applicant-avatar { width:40px; height:40px; border-radius:14px; background:linear-gradient(135deg,#DCFCE7,#A7F3D0); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+        .applicant-info { flex:1; min-width:0; }
+        .applicant-name { font-size:0.9rem; font-weight:700; margin-bottom:2px; }
+        .applicant-meta { font-size:0.75rem; color:var(--text-sub); }
+        .applicant-menu { font-size:0.78rem; font-weight:600; color:var(--green-dark); background:var(--green-light); padding:3px 9px; border-radius:8px; white-space:nowrap; }
+        .planned-badge { font-size:0.72rem; font-weight:800; color:#166534; background:#DCFCE7; border:1px solid #BBF7D0; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+        .del-btn { background:none; border:none; padding:6px; border-radius:8px; cursor:pointer; color:#D1D5DB; font-size:1rem; transition:all 0.12s; flex-shrink:0; }
+        .del-btn:hover { background:var(--red-light); color:var(--red); }
+        .loading-state { padding:2rem; text-align:center; color:var(--text-sub); font-size:0.82rem; }
+
+        /* ── 드롭존 ── */
+        .drop-zone {
+            border: 2px dashed var(--border); border-radius: 14px;
+            padding: 1.75rem 1rem; text-align: center; cursor: pointer;
+            transition: all 0.2s; position: relative;
+        }
+        .drop-zone:hover, .drop-zone.drag-over { border-color: var(--amber); background: var(--amber-light); }
+        .drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+        .drop-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+        .drop-text { font-size: 0.82rem; font-weight: 600; color: var(--text-sub); }
+        .drop-sub  { font-size: 0.7rem; color: #C4C9D4; margin-top: 2px; }
+
+        #preview-wrap { display:none; position:relative; }
+        #preview-img  { width:100%; max-height:200px; object-fit:cover; border-radius:12px; display:block; }
+        .preview-remove { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:0.9rem; }
+
+        .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+        .tag-hint { font-size:0.68rem; color:var(--text-sub); margin-top:2px; }
+
+        /* ── 갤러리 ── */
+        .tag-filters { display:flex; gap:6px; flex-wrap:wrap; }
+        .tag-filter-btn { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--text-sub); cursor:pointer; transition:all 0.12s; font-family:'Pretendard',sans-serif; }
+        .tag-filter-btn.active { background:var(--amber); border-color:var(--amber); color:white; }
+
+        .gallery-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.85rem; }
+        .post-card { background:var(--card); border-radius:18px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06); transition:all 0.18s; }
+        .post-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.1); }
+        .post-img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--bg); }
+        .post-body { padding:0.8rem 0.9rem; }
+        .post-tags { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:0.4rem; }
+        .post-tag { font-size:9px; font-weight:600; padding:2px 6px; border-radius:5px; background:var(--amber-light); color:#92400E; }
+        .post-menu { font-size:0.85rem; font-weight:800; margin-bottom:2px; letter-spacing:-0.2px; }
+        .post-author { font-size:0.72rem; color:var(--text-sub); margin-bottom:0.5rem; }
+        .post-reactions { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+        .react-btn { display:flex; align-items:center; gap:3px; padding:4px 8px; border-radius:16px; border:1px solid var(--border); background:var(--bg); font-size:11px; font-weight:600; color:var(--text-sub); cursor:pointer; transition:all 0.12s; font-family:'Pretendard',sans-serif; }
+        .react-btn:hover { border-color:var(--amber); background:var(--amber-light); color:#92400E; }
+        .react-btn.reacted { background:var(--amber-light); border-color:var(--amber); color:#92400E; }
+        .del-post-btn { margin-left:auto; background:none; border:none; color:#D1D5DB; font-size:0.8rem; cursor:pointer; padding:4px; border-radius:5px; transition:all 0.12s; }
+        .del-post-btn:hover { background:var(--red-light); color:var(--red); }
+
+
+        .meal-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+        .request-btn { border:none; background:var(--green); color:white; border-radius:10px; padding:7px 10px; font-size:0.72rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.12s; }
+        .request-btn:hover { background:#16A34A; transform:translateY(-1px); }
+        .request-box { background:var(--card); border-radius:20px; padding:1.25rem; box-shadow:0 1px 4px rgba(0,0,0,0.05); margin-top:1rem; }
+        .request-search { display:flex; gap:8px; align-items:center; margin-bottom:0.75rem; }
+        .request-search input { flex:1; }
+        .mini-btn { border:1px solid var(--border); background:white; color:var(--text); border-radius:12px; padding:11px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+        .mini-btn.green { background:var(--green); border-color:var(--green); color:white; }
+        .request-columns { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+        .request-title { font-size:0.8rem; font-weight:800; margin:0.5rem 0; color:var(--text); }
+        .request-card { border:1px solid var(--border); border-radius:14px; padding:0.85rem; margin-bottom:0.55rem; background:#fff; font-size:0.78rem; }
+        .request-card strong { display:block; font-size:0.86rem; margin-bottom:4px; }
+        .request-msg { color:var(--text-sub); line-height:1.45; margin:5px 0; }
+        .request-status { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.68rem; font-weight:800; margin-top:4px; }
+        .status-pending { background:var(--amber-light); color:#B45309; }
+        .status-accepted { background:var(--green-light); color:var(--green-dark); }
+        .status-rejected { background:var(--red-light); color:var(--red); }
+        .request-card-actions { display:flex; gap:6px; margin-top:8px; }
+        .request-card-actions button { border:0; border-radius:9px; padding:6px 9px; font-size:0.72rem; font-weight:700; cursor:pointer; }
+        .accept-btn { background:var(--green); color:white; }
+        .reject-btn { background:var(--red-light); color:var(--red); }
+        .contact-line { margin-top:7px; color:var(--green-dark); font-weight:700; word-break:break-all; }
+        .modal-backdrop { position:fixed; inset:0; background:rgba(17,24,39,0.45); display:none; align-items:center; justify-content:center; z-index:100; padding:1rem; }
+        .modal-backdrop.show { display:flex; }
+        .modal-card { width:100%; max-width:430px; background:white; border-radius:22px; padding:1.25rem; box-shadow:0 18px 50px rgba(0,0,0,0.20); }
+        .modal-title { font-size:1rem; font-weight:900; margin-bottom:4px; }
+        .modal-sub { font-size:0.78rem; color:var(--text-sub); margin-bottom:1rem; }
+        .modal-actions { display:flex; gap:8px; margin-top:0.75rem; }
+        .modal-actions button { flex:1; }
+        @media(max-width:720px){ .request-columns{grid-template-columns:1fr;} .applicant-item{align-items:flex-start;} .meal-actions{flex-direction:column; align-items:flex-end;} }
+
+        @media(max-width:480px) {
+            .form-row-2 { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="back-btn">‹</a>
+        <span class="nav-title">밥약 신청</span>
+        <div class="tab-bar">
+            <button class="tab-btn active green" onclick="switchTab('meal', this)">🍚 밥약 신청</button>
+            <button class="tab-btn amber"        onclick="switchTab('gallery', this)">🖼️ 갤러리</button>
+        </div>
+    </nav>
+
+    <div class="wrap">
+
+        <!-- ══ 탭 1: 밥약 신청 ══ -->
+        <div class="panel active" id="panel-meal">
+
+            <div class="hero-banner green">
+                <div class="b1"></div><div class="b2"></div>
+                <div class="hero-icon">🍚</div>
+                <div class="hero-title">밥약 신청 시스템</div>
+                <div class="hero-desc">공강 시간에 같이 밥 먹을 학우를 찾아보세요</div>
+            </div>
+
+            <div class="section-label">신청 정보 입력</div>
+            <div id="toast-meal" class="toast"></div>
+
+            <div class="form-card">
+                <div class="input-group">
+                    <label class="input-label">🔢 학번</label>
+                    <input class="input-field green" type="text" id="studentId" placeholder="10자리 학번 (예: 2025314187)" maxlength="10">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">👤 이름</label>
+                    <input class="input-field green" type="text" id="name" placeholder="이름 입력">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">🍽️ 먹고 싶은 메뉴</label>
+                    <input class="input-field green" type="text" id="menu" placeholder="예: 돈까스, 라면, 국밥 ...">
+                </div>
+                <div class="form-row-2">
+                    <div class="input-group">
+                        <label class="input-label">💬 연락수단</label>
+                        <select class="input-field green" id="contact-type" onchange="updateContactPlaceholder()">
+                            <option value="">선택</option>
+                            <option value="카카오톡 ID">카카오톡 ID</option>
+                            <option value="카카오톡 오픈채팅">카카오톡 오픈채팅</option>
+                            <option value="인스타 ID">인스타 ID</option>
+                            <option value="이메일">이메일</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">📝 세부사항</label>
+                        <input class="input-field green" type="text" id="contact-detail" placeholder="선택한 연락수단의 ID, 링크, 이메일 등을 입력">
+                    </div>
+                </div>
+                <button class="action-btn green" id="apply-btn" onclick="apply()">✓&nbsp; 밥약 신청하기</button>
+            </div>
+
+            <div class="list-header">
+                <span class="section-label">신청 현황 <span class="count-badge green" id="count-badge">0명</span></span>
+                <button class="refresh-btn" onclick="refreshMealPage()">↻ 새로고침</button>
+            </div>
+            <div class="applicant-list" id="applicant-list">
+                <div class="loading-state">불러오는 중...</div>
+            </div>
+
+            <div class="request-box">
+                <span class="section-label">밥약 요청함</span>
+                <div class="request-search">
+                    <input class="input-field green" type="text" id="request-student-id" placeholder="내 학번 입력 후 요청함 확인" maxlength="10">
+                    <button class="mini-btn green" onclick="fetchMealRequests()">요청함 확인</button>
+                </div>
+                <div class="request-columns">
+                    <div>
+                        <div class="request-title">받은 요청</div>
+                        <div id="received-requests" class="request-list"><div class="empty-state">학번을 입력해 요청함을 확인하세요.</div></div>
+                    </div>
+                    <div>
+                        <div class="request-title">보낸 요청</div>
+                        <div id="sent-requests" class="request-list"><div class="empty-state">학번을 입력해 요청함을 확인하세요.</div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ══ 탭 2: 갤러리 ══ -->
+        <div class="panel" id="panel-gallery">
+
+            <div class="hero-banner amber">
+                <div class="b1"></div><div class="b2"></div>
+                <div class="hero-icon">🖼️</div>
+                <div class="hero-title">오늘의 메뉴 갤러리</div>
+                <div class="hero-desc">함께 먹은 음식 사진을 올려보세요</div>
+            </div>
+
+            <div class="section-label">인증샷 올리기</div>
+            <div id="toast-gallery" class="toast"></div>
+
+            <div class="form-card">
+                <div class="drop-zone" id="drop-zone">
+                    <input type="file" id="image-input" accept="image/*" onchange="previewImage(this)">
+                    <div class="drop-icon">📷</div>
+                    <div class="drop-text">사진을 클릭하거나 드래그해서 올려주세요</div>
+                    <div class="drop-sub">JPG · PNG · GIF · WEBP · 최대 10MB</div>
+                </div>
+                <div id="preview-wrap">
+                    <img id="preview-img" src="" alt="미리보기">
+                    <button class="preview-remove" onclick="removePreview()">✕</button>
+                </div>
+                <div class="form-row-2">
+                    <div class="input-group">
+                        <label class="input-label">👤 이름</label>
+                        <input class="input-field amber" type="text" id="g-name" placeholder="이름 입력">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">🍽️ 메뉴</label>
+                        <input class="input-field amber" type="text" id="g-menu" placeholder="예: 돈까스">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">🏷️ 해시태그</label>
+                    <input class="input-field amber" type="text" id="g-tags" placeholder="쉼표로 구분 예: 쪽문맛집, 학식, 혼밥탈출">
+                    <div class="tag-hint">태그를 달면 다른 학우들이 쉽게 찾을 수 있어요</div>
+                </div>
+                <button class="action-btn amber" id="upload-btn" onclick="uploadPost()">📸&nbsp; 인증샷 올리기</button>
+            </div>
+
+            <div class="list-header">
+                <span class="section-label">전체 게시글 <span class="count-badge amber" id="post-count">0개</span></span>
+                <div class="tag-filters" id="tag-filters">
+                    <button class="tag-filter-btn active" data-tag="전체" onclick="filterTag('전체',this)">전체</button>
+                </div>
+            </div>
+
+            <div class="gallery-grid" id="gallery-grid">
+                <div style="grid-column:1/-1">
+                    <div class="empty-state"><span class="empty-icon">🖼️</span>아직 게시글이 없어요.<br>첫 번째로 인증샷을 올려보세요!</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="modal-backdrop" id="request-modal">
+        <div class="modal-card">
+            <div class="modal-title">같이 먹기 요청</div>
+            <div class="modal-sub" id="request-target-label">상대에게 밥약 요청을 보냅니다.</div>
+            <input type="hidden" id="target-student-id">
+            <div class="input-group">
+                <label class="input-label">🔢 내 학번</label>
+                <input class="input-field green" type="text" id="requester-student-id" maxlength="10" placeholder="10자리 학번">
+            </div>
+            <div class="input-group">
+                <label class="input-label">👤 내 이름</label>
+                <input class="input-field green" type="text" id="requester-name" placeholder="이름 입력">
+            </div>
+            <div class="modal-sub" style="margin-top:0.2rem;margin-bottom:0.6rem;">수락되면 상대가 등록한 연락수단을 확인할 수 있습니다.</div>
+            <div class="input-group">
+                <label class="input-label">✉️ 메시지</label>
+                <input class="input-field green" type="text" id="request-message" placeholder="예: 저도 라면 먹고 싶어요!">
+            </div>
+            <div class="modal-actions">
+                <button class="mini-btn" onclick="closeRequestModal()">취소</button>
+                <button class="mini-btn green" onclick="sendMealRequest()">요청 보내기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let allPosts = [];
+        let activeTag = '전체';
+
+        // ── 탭 전환 ──
+        function switchTab(name, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            btn.classList.add('active');
+            if (name === 'gallery') fetchGallery();
+        }
+
+        // ── 토스트 ──
+        function toast(id, msg, ok) {
+            const el = document.getElementById(id);
+            el.textContent = (ok ? '✓  ' : '✗  ') + msg;
+            el.className = 'toast ' + (ok ? 'ok' : 'err');
+            setTimeout(() => { el.className = 'toast'; }, 3000);
+        }
+
+        // ══ 밥약 신청 ══════════════════════════════════════════════════════════
+
+        function escapeHtml(v) {
+            const div = document.createElement('div');
+            div.textContent = String(v ?? '');
+            return div.innerHTML;
+        }
+
+        function updateContactPlaceholder() {
+            const type = document.getElementById('contact-type').value;
+            const detail = document.getElementById('contact-detail');
+            const placeholders = {
+                '카카오톡 ID': '예: kakao_id_123',
+                '카카오톡 오픈채팅': '예: https://open.kakao.com/o/...',
+                '인스타 ID': '예: @instagram_id',
+                '이메일': '예: example@email.com',
+                '기타': '연락 가능한 방법을 입력하세요'
+            };
+            detail.placeholder = placeholders[type] || '선택한 연락수단의 ID, 링크, 이메일 등을 입력';
+        }
+
+        let allMeals = [];
+        let verifiedMealBoxStudentId = '';  // 요청함 확인을 완료한 학번
+
+        async function apply() {
+            const studentId = document.getElementById('studentId').value.trim();
+            const name      = document.getElementById('name').value.trim();
+            const menu      = document.getElementById('menu').value.trim();
+            const contactType = document.getElementById('contact-type').value.trim();
+            const contactDetail = document.getElementById('contact-detail').value.trim();
+            if (studentId.length !== 10) return toast('toast-meal','학번 10자리를 입력해주세요',false);
+            if (!name) return toast('toast-meal','이름을 입력해주세요',false);
+            if (!menu) return toast('toast-meal','메뉴를 입력해주세요',false);
+            if (!contactType) return toast('toast-meal','연락수단을 선택해주세요',false);
+            if (!contactDetail) return toast('toast-meal','연락수단 세부사항을 입력해주세요',false);
+
+            const btn = document.getElementById('apply-btn');
+            btn.disabled = true;
+            try {
+                const res  = await fetch(`${API_BASE}/api/apply`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ studentId, name, menu, contactType, contactDetail })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    toast('toast-meal', data.message, true);
+                    ['studentId','name','menu','contact-detail'].forEach(id => document.getElementById(id).value = '');
+                    document.getElementById('contact-type').value = '';
+                    updateContactPlaceholder();
+                    fetchList();
+                } else { toast('toast-meal', data.detail||'입력 형식을 확인해주세요', false); }
+            } catch { toast('toast-meal','서버 연결에 실패했습니다',false); }
+            finally { btn.disabled = false; }
+        }
+
+        const FOOD_EMOJIS = ['🍜','🍣','🍔','🌮','🍱','🥘','🍛','🥗','🍝','🍲'];
+
+        async function fetchList() {
+            const container = document.getElementById('applicant-list');
+            try {
+                const res  = await fetch(`${API_BASE}/api/list`);
+                const data = await res.json();
+                allMeals = data;
+                document.getElementById('count-badge').textContent = `${data.length}명`;
+                if (!data.length) {
+                    container.innerHTML = `<div class="empty-state"><span class="empty-icon">🍽️</span>아직 신청자가 없어요.<br>첫 번째로 신청해보세요!</div>`;
+                    return;
+                }
+                container.innerHTML = data.map((item, i) => {
+                    const safeStudentId = escapeHtml(item.studentId);
+                    const canDeleteOwnMeal = verifiedMealBoxStudentId === item.studentId;
+                    const plannedCount = Number(item.plannedCount || 0);
+                    const plannedBadge = plannedCount > 0 ? `<span class="planned-badge">밥약 예정 ${plannedCount}명</span>` : '';
+                    return `
+                    <div class="applicant-item">
+                        <div class="applicant-avatar">${FOOD_EMOJIS[i % FOOD_EMOJIS.length]}</div>
+                        <div class="applicant-info">
+                            <div class="applicant-name">${escapeHtml(item.name)}</div>
+                            <div class="applicant-meta">${maskStudentId(item.studentId)}</div>
+                        </div>
+                        <span class="applicant-menu">${escapeHtml(item.menu)}</span>
+                        ${plannedBadge}
+                        <div class="meal-actions">
+                            <button class="request-btn" onclick="openRequestModalByIndex(${i})">같이 먹기 요청</button>
+                            ${canDeleteOwnMeal ? `<button class="del-btn" title="내 밥약 신청 삭제" onclick="deleteMeal('${safeStudentId}')">✕</button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch {
+                container.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠️</span>서버 연결에 실패했습니다</div>`;
+            }
+        }
+
+        function openRequestModalByIndex(index) {
+            const item = allMeals[index];
+            if (!item) return;
+            document.getElementById('target-student-id').value = item.studentId;
+            document.getElementById('request-target-label').textContent = `${item.name}님에게 “${item.menu}” 밥약 요청을 보냅니다.`;
+            document.getElementById('request-modal').classList.add('show');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('request-modal').classList.remove('show');
+        }
+
+        async function sendMealRequest() {
+            const targetStudentId = document.getElementById('target-student-id').value;
+            const requesterStudentId = document.getElementById('requester-student-id').value.trim();
+            const requesterName = document.getElementById('requester-name').value.trim();
+            const message = document.getElementById('request-message').value.trim();
+            if (requesterStudentId.length !== 10) return toast('toast-meal','내 학번 10자리를 입력해주세요',false);
+            if (!requesterName) return toast('toast-meal','내 이름을 입력해주세요',false);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/meal/request`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ targetStudentId, requesterStudentId, requesterName, message })
+                });
+                const data = await res.json();
+                if (!res.ok) return toast('toast-meal', data.detail || '요청 전송 실패', false);
+                toast('toast-meal', data.message + ' 요청함은 학번 입력 후 확인할 수 있습니다.', true);
+                ['requester-student-id','requester-name','request-message'].forEach(id => document.getElementById(id).value = '');
+                closeRequestModal();
+                resetRequestLists();
+            } catch { toast('toast-meal','요청 전송 중 서버 연결에 실패했습니다',false); }
+        }
+
+        async function refreshMealPage() {
+            await fetchList();
+            document.getElementById('request-student-id').value = '';
+            resetRequestLists(false);
+        }
+
+        async function fetchMealRequests() {
+            const studentId = document.getElementById('request-student-id').value.trim();
+            if (studentId.length !== 10) return toast('toast-meal','요청함을 확인할 학번 10자리를 입력해주세요',false);
+            try {
+                const res = await fetch(`${API_BASE}/api/meal/requests/${studentId}`);
+                const data = await res.json();
+                if (!res.ok) return toast('toast-meal', data.detail || '요청함 조회 실패', false);
+                verifiedMealBoxStudentId = studentId;
+                renderRequests(data);
+                fetchList();
+            } catch { toast('toast-meal','요청함 조회 중 서버 연결에 실패했습니다',false); }
+        }
+
+        function resetRequestLists(refreshList = true) {
+            verifiedMealBoxStudentId = '';
+            document.getElementById('received-requests').innerHTML = '<div class="empty-state">학번을 입력해 요청함을 확인하세요.</div>';
+            document.getElementById('sent-requests').innerHTML = '<div class="empty-state">학번을 입력해 요청함을 확인하세요.</div>';
+            if (refreshList) fetchList();
+        }
+
+        function statusLabel(status) {
+            if (status === 'accepted') return '<span class="request-status status-accepted">수락됨</span>';
+            if (status === 'rejected') return '<span class="request-status status-rejected">거절됨</span>';
+            return '<span class="request-status status-pending">대기중</span>';
+        }
+
+        function renderRequests(data) {
+            const received = document.getElementById('received-requests');
+            const sent = document.getElementById('sent-requests');
+            received.innerHTML = data.received.length ? data.received.map(r => `
+                <div class="request-card">
+                    <strong>${escapeHtml(r.requesterName)}님의 요청</strong>
+                    <div>${escapeHtml(r.targetMenu)} 같이 먹기 요청</div>
+                    <div class="request-msg">${escapeHtml(r.message || '메시지 없음')}</div>
+                    ${statusLabel(r.status)}
+                    ${r.status === 'accepted' ? `<div class="contact-line">수락 완료 · 상대가 내 연락수단을 확인할 수 있습니다.</div>` : ''}
+                    ${r.status === 'pending' ? `<div class="request-card-actions"><button class="accept-btn" onclick="respondRequest('${r.id}','accepted')">수락</button><button class="reject-btn" onclick="respondRequest('${r.id}','rejected')">거절</button></div>` : ''}
+                </div>`).join('') : '<div class="empty-state">받은 요청이 없습니다.</div>';
+
+            sent.innerHTML = data.sent.length ? data.sent.map(r => `
+                <div class="request-card">
+                    <strong>${escapeHtml(r.targetName)}님에게 보낸 요청</strong>
+                    <div>${escapeHtml(r.targetMenu)} 밥약</div>
+                    <div class="request-msg">${escapeHtml(r.message || '메시지 없음')}</div>
+                    ${statusLabel(r.status)}
+                    ${r.contact ? `<div class="contact-line">상대 연락수단: ${escapeHtml(r.contact)}</div>` : ''}
+                </div>`).join('') : '<div class="empty-state">보낸 요청이 없습니다.</div>';
+        }
+
+        async function respondRequest(requestId, status) {
+            try {
+                const res = await fetch(`${API_BASE}/api/meal/requests/${requestId}/respond`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ status })
+                });
+                const data = await res.json();
+                if (!res.ok) return toast('toast-meal', data.detail || '처리 실패', false);
+                toast('toast-meal', status === 'accepted' ? '요청을 수락했습니다' : '요청을 거절했습니다', true);
+                fetchMealRequests();
+            } catch { toast('toast-meal','요청 처리 중 서버 연결에 실패했습니다',false); }
+        }
+
+        async function deleteMeal(studentId) {
+            if (verifiedMealBoxStudentId !== studentId) {
+                return toast('toast-meal','본인 학번으로 요청함을 확인한 뒤에만 삭제할 수 있습니다.',false);
+            }
+            if (!confirm(`학번 ${maskStudentId(studentId)}의 밥약 신청을 삭제할까요? 관련 요청도 함께 삭제됩니다.`)) return;
+            try {
+                const res  = await fetch(`${API_BASE}/api/meal/${studentId}?ownerStudentId=${encodeURIComponent(verifiedMealBoxStudentId)}`, { method:'DELETE' });
+                const data = await res.json();
+                if (!res.ok) return toast('toast-meal', data.detail || '삭제 권한을 확인할 수 없습니다.', false);
+                toast('toast-meal', data.message, true);
+                document.getElementById('request-student-id').value = '';
+                resetRequestLists();
+            } catch { toast('toast-meal','삭제에 실패했습니다',false); }
+        }
+
+        // ══ 갤러리 ══════════════════════════════════════════════════════════════
+
+        function previewImage(input) {
+            if (!input.files?.[0]) return;
+            document.getElementById('preview-img').src = URL.createObjectURL(input.files[0]);
+            document.getElementById('preview-wrap').style.display = 'block';
+            document.getElementById('drop-zone').style.display    = 'none';
+        }
+
+        function removePreview() {
+            document.getElementById('preview-wrap').style.display = 'none';
+            document.getElementById('drop-zone').style.display    = 'block';
+            document.getElementById('image-input').value = '';
+        }
+
+        const dz = document.getElementById('drop-zone');
+        dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault(); dz.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) { document.getElementById('image-input').files = e.dataTransfer.files; previewImage(document.getElementById('image-input')); }
+        });
+
+        async function uploadPost() {
+            const name = document.getElementById('g-name').value.trim();
+            const menu = document.getElementById('g-menu').value.trim();
+            const tags = document.getElementById('g-tags').value.trim();
+            const file = document.getElementById('image-input').files[0];
+
+            if (!file) return toast('toast-gallery','사진을 선택해주세요',false);
+            if (!name) return toast('toast-gallery','이름을 입력해주세요',false);
+            if (!menu) return toast('toast-gallery','메뉴를 입력해주세요',false);
+
+            const btn = document.getElementById('upload-btn');
+            btn.disabled = true; btn.textContent = '업로드 중...';
+
+            const form = new FormData();
+            form.append('name',  name);
+            form.append('menu',  menu);
+            form.append('tags',  tags);
+            form.append('image', file);
+
+            try {
+                const res  = await fetch(`${API_BASE}/api/gallery`, { method:'POST', body:form });
+                const data = await res.json();
+                if (res.ok) {
+                    toast('toast-gallery','게시글이 올라갔어요! 🎉',true);
+                    removePreview();
+                    ['g-name','g-menu','g-tags'].forEach(id => document.getElementById(id).value = '');
+                    fetchGallery();
+                } else { toast('toast-gallery', data.detail||'업로드 실패', false); }
+            } catch { toast('toast-gallery','서버 연결 실패',false); }
+            finally { btn.disabled = false; btn.innerHTML = '📸&nbsp; 인증샷 올리기'; }
+        }
+
+        async function fetchGallery() {
+            try {
+                const res = await fetch(`${API_BASE}/api/gallery`);
+                allPosts  = await res.json();
+                buildTagFilters();
+                renderGallery();
+            } catch {
+                document.getElementById('gallery-grid').innerHTML =
+                    `<div style="grid-column:1/-1"><div class="empty-state"><span class="empty-icon">⚠️</span>서버 연결 실패</div></div>`;
+            }
+        }
+
+        function buildTagFilters() {
+            const tagSet = new Set();
+            allPosts.forEach(p => p.tags.forEach(t => tagSet.add(t)));
+            const container = document.getElementById('tag-filters');
+            const existing  = [...container.querySelectorAll('[data-tag]')].map(b => b.dataset.tag);
+            tagSet.forEach(tag => {
+                if (existing.includes(tag)) return;
+                const btn = document.createElement('button');
+                btn.className = 'tag-filter-btn'; btn.dataset.tag = tag;
+                btn.textContent = '#' + tag; btn.onclick = () => filterTag(tag, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function filterTag(tag, btn) {
+            activeTag = tag;
+            document.querySelectorAll('.tag-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const filtered = activeTag === '전체' ? allPosts : allPosts.filter(p => p.tags.includes(activeTag));
+            document.getElementById('post-count').textContent = `${filtered.length}개`;
+            const grid = document.getElementById('gallery-grid');
+            if (!filtered.length) {
+                grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><span class="empty-icon">🖼️</span>아직 게시글이 없어요.<br>첫 번째로 인증샷을 올려보세요!</div></div>`;
+                return;
+            }
+            grid.innerHTML = filtered.map(p => `
+                <div class="post-card">
+                    <img class="post-img" src="${p.image_url}" alt="${p.menu}" loading="lazy" onerror="this.style.height='100px';this.style.background='#F3F4F6'">
+                    <div class="post-body">
+                        ${p.tags.length ? `<div class="post-tags">${p.tags.map(t=>`<span class="post-tag">#${t}</span>`).join('')}</div>` : ''}
+                        <div class="post-menu">${p.menu}</div>
+                        <div class="post-author">by ${p.name}</div>
+                        <div class="post-reactions">
+                            <button class="react-btn" onclick="react('${p.id}','yummy',this)">😋 <span>${p.reactions.yummy}</span></button>
+                            <button class="react-btn" onclick="react('${p.id}','where',this)">📍 <span>${p.reactions.where}</span></button>
+                            <button class="del-post-btn" onclick="deletePost('${p.id}')">✕</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function react(postId, reaction, btn) {
+            try {
+                const res  = await fetch(`${API_BASE}/api/gallery/${postId}/react?reaction=${reaction}`, { method:'POST' });
+                const data = await res.json();
+                btn.classList.toggle('reacted');
+                btn.querySelector('span').textContent = data.reactions[reaction];
+            } catch { /* silent */ }
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('이 게시글을 삭제할까요?')) return;
+            try { await fetch(`${API_BASE}/api/gallery/${postId}`, { method:'DELETE' }); fetchGallery(); }
+            catch { toast('toast-gallery','삭제 실패',false); }
+        }
+
+        document.getElementById('request-student-id').addEventListener('input', (e) => {
+            if (e.target.value.trim().length === 0) resetRequestLists();
+        });
+        updateContactPlaceholder();
+        fetchList();
+    </script>
+</body>
+</html>

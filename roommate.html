@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>룸메이트 매칭 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg:#0e0f13; --surface:#161820; --surface2:#1e2028;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --accent:#4f8ef7; --green:#34d399; --amber:#fbbf24; --red:#f87171; --purple:#a78bfa;
+  --text:#e8eaf0; --text2:#8b8fa8; --text3:#555970;
+  --mono:'IBM Plex Mono',monospace; --sans:'Nanum Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6;}
+.wrapper{max-width:960px;margin:0 auto;padding:0 1.5rem 4rem;}
+
+.site-header{padding:2.5rem 0 2rem;border-bottom:.5px solid var(--border);margin-bottom:2rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.site-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.site-header h1 span{color:var(--accent);}
+.subtitle{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:4px;}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;}
+.hbadge{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:5px;white-space:nowrap;}
+.hbadge-blue{background:rgba(79,142,247,.1);border:.5px solid rgba(79,142,247,.3);color:var(--accent);}
+.hbadge-green{background:rgba(52,211,153,.1);border:.5px solid rgba(52,211,153,.3);color:var(--green);}
+.hbadge-purple{background:rgba(167,139,250,.1);border:.5px solid rgba(167,139,250,.3);color:var(--purple);}
+
+.server-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text3);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.status-dot.ok{background:var(--green);}
+.status-dot.err{background:var(--red);}
+
+.tabs{display:flex;border:.5px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:1.75rem;background:var(--surface);}
+.tab-btn{flex:1;padding:11px 6px;font-family:var(--sans);font-size:13px;font-weight:700;background:none;border:none;border-right:.5px solid var(--border);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.tab-btn:last-child{border-right:none;}
+.tab-btn svg{width:14px;height:14px;flex-shrink:0;}
+.tab-btn:hover{color:var(--text);background:var(--surface2);}
+.tab-btn.active{background:rgba(79,142,247,.12);color:var(--accent);}
+
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:.5px solid var(--border);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group label{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:.04em;}
+.form-group input,.form-group select{background:var(--surface2);border:.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:9px 12px;outline:none;transition:border-color .15s;width:100%;}
+.form-group input::placeholder{color:var(--text3);}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.form-group select option{background:#1e2028;}
+
+.primary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.primary-note{font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px;}
+
+.checklist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.check-item{display:flex;align-items:center;gap:7px;padding:9px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;user-select:none;}
+.check-item:hover{border-color:var(--border2);color:var(--text);}
+.check-item.selected{background:rgba(79,142,247,.1);border-color:rgba(79,142,247,.4);color:var(--accent);}
+.check-item .icon{font-size:14px;flex-shrink:0;}
+.check-item .w-badge{margin-left:auto;font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(251,191,36,.12);color:var(--amber);border:.5px solid rgba(251,191,36,.25);display:none;white-space:nowrap;}
+.check-item.selected .w-badge{display:block;}
+
+.weight-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:.5px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;}
+.weight-row .wlabel{flex:1;color:var(--text2);font-size:13px;}
+.weight-row input[type=range]{flex:1;max-width:130px;accent-color:var(--amber);}
+.weight-row .wval-input{font-family:var(--mono);font-size:12px;color:var(--amber);width:48px;text-align:right;background:transparent;border:none;border-bottom:.5px solid var(--amber);outline:none;padding:1px 2px;cursor:text;}
+.weight-row .wval-input:focus{background:rgba(251,191,36,.08);border-radius:3px 3px 0 0;}
+.weight-row.critical .wlabel{color:var(--red);}
+.weight-row.critical .wval-input{color:var(--red);border-bottom-color:var(--red);}
+.weight-row.critical input[type=range]{accent-color:var(--red);}
+.wval-wrap{display:flex;align-items:center;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;border:none;width:100%;margin-top:.75rem;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#3a7ae8;transform:translateY(-1px);}
+.btn-primary:active{transform:none;}
+.btn-primary:disabled{background:var(--surface2);color:var(--text3);cursor:not-allowed;transform:none;}
+.btn-sm{padding:7px 14px;font-size:12px;width:auto;margin-top:0;}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:.5px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);background:var(--surface);transform:none;}
+
+.notif{display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;font-family:var(--mono);}
+.notif.show-ok{display:flex;align-items:center;gap:8px;background:rgba(52,211,153,.1);border:.5px solid rgba(52,211,153,.3);color:var(--green);}
+.notif.show-err{display:flex;align-items:center;gap:8px;background:rgba(248,113,113,.1);border:.5px solid rgba(248,113,113,.3);color:var(--red);}
+
+.pipeline{display:flex;align-items:center;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px;}
+.pipe-step{padding:7px 12px;font-family:var(--mono);font-size:11px;border:.5px solid var(--border2);background:var(--surface2);color:var(--text3);white-space:nowrap;transition:all .3s;}
+.pipe-step:first-child{border-radius:7px 0 0 7px;}
+.pipe-step:last-child{border-radius:0 7px 7px 0;}
+.pipe-step.active{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.4);color:var(--accent);}
+.pipe-step.done{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--green);}
+.pipe-arrow{font-size:12px;color:var(--text3);padding:0 2px;flex-shrink:0;}
+
+.match-search-row{display:flex;gap:10px;align-items:flex-end;}
+.match-search-row .form-group{flex:1;}
+.match-search-row .btn{width:auto;margin-top:0;padding:9px 18px;white-space:nowrap;}
+
+.match-card{background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:.75rem;}
+.match-card.high{border-color:rgba(52,211,153,.35);}
+.match-card.mid{border-color:rgba(251,191,36,.25);}
+.match-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.match-name{font-size:16px;font-weight:800;}
+.match-meta{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:3px;}
+.match-score{font-family:var(--mono);font-size:20px;font-weight:500;text-align:right;}
+.match-score small{display:block;font-size:10px;color:var(--text3);margin-top:2px;}
+.score-high{color:var(--green);}
+.score-mid{color:var(--amber);}
+.score-low{color:var(--text2);}
+.bar-track{height:4px;background:var(--surface2);border-radius:2px;margin:10px 0;overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.bar-high{background:var(--green);}
+.bar-mid{background:var(--amber);}
+.bar-low{background:var(--text3);}
+.tags{display:flex;flex-wrap:wrap;gap:5px;}
+.tag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:.5px solid var(--border);}
+.tag.shared{background:rgba(79,142,247,.08);color:var(--accent);border-color:rgba(79,142,247,.25);}
+.tag.weighted{background:rgba(248,113,113,.08);color:var(--red);border-color:rgba(248,113,113,.25);}
+.match-section-label{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cache-badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;}
+.cb-hit{background:rgba(52,211,153,.1);color:var(--green);border:.5px solid rgba(52,211,153,.3);}
+.cb-miss{background:rgba(79,142,247,.1);color:var(--accent);border:.5px solid rgba(79,142,247,.3);}
+.ms-badge{font-family:var(--mono);font-size:10px;color:var(--text3);}
+
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1rem;}
+.stat-box{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:1rem;text-align:center;}
+.stat-num{font-family:var(--mono);font-size:20px;font-weight:500;}
+.stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;}
+
+.hash-table-container{overflow-x:auto;}
+.hash-table{width:100%;border-collapse:collapse;font-size:13px;}
+.hash-table th{font-family:var(--mono);font-size:11px;color:var(--text3);text-align:left;padding:8px 12px;border-bottom:.5px solid var(--border);font-weight:400;letter-spacing:.06em;text-transform:uppercase;}
+.hash-table td{padding:9px 12px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.hash-table tr:last-child td{border-bottom:none;}
+.hash-table tr:hover td{background:var(--surface2);}
+.slot-badge{font-family:var(--mono);font-size:12px;padding:3px 8px;background:var(--surface2);border:.5px solid var(--border2);border-radius:5px;color:var(--text3);}
+.sid-code{font-family:var(--mono);font-size:12px;color:var(--accent);}
+.chain-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-right:5px;vertical-align:middle;}
+.pf-tag{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;border:.5px solid rgba(248,113,113,.3);background:rgba(248,113,113,.08);color:var(--red);margin-left:4px;}
+
+.redis-log{background:var(--surface2);border:.5px solid var(--border2);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2;max-height:280px;overflow-y:auto;}
+.rl-cmd{color:var(--accent);}
+.rl-key{color:var(--amber);}
+.rl-val{color:var(--green);}
+.rl-time{color:var(--text3);}
+.rl-err{color:var(--red);}
+
+.algo-box{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1rem;font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.9;}
+.algo-box strong{color:var(--accent);}
+.algo-box .formula{color:var(--green);font-size:12px;}
+.empty-state{text-align:center;padding:3rem 1rem;font-family:var(--mono);font-size:13px;color:var(--text3);}
+.loading{text-align:center;padding:2rem;font-family:var(--mono);font-size:12px;color:var(--text3);animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+@media(max-width:620px){
+  .form-grid,.checklist-grid,.primary-grid{grid-template-columns:1fr 1fr;}
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+  .match-search-row{flex-direction:column;}
+  .match-search-row .btn{width:100%;margin-top:.5rem;}
+  .site-header{flex-direction:column;align-items:flex-start;}
+}
+
+
+.active-roommate-box{background:linear-gradient(90deg, rgba(52,211,153,.12), rgba(52,211,153,.05));border:.5px solid rgba(52,211,153,.4);border-radius:14px;padding:1.25rem 1.4rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 0 0 1px rgba(52,211,153,.08) inset;}
+.active-roommate-box.cancel{background:linear-gradient(90deg, rgba(167,139,250,.12), rgba(167,139,250,.05));border-color:rgba(167,139,250,.35);}
+.active-roommate-main{display:flex;align-items:center;gap:1rem;min-width:240px;flex:1;}
+.active-roommate-icon{width:82px;height:82px;border-radius:50%;border:.5px solid rgba(52,211,153,.4);display:flex;align-items:center;justify-content:center;font-size:34px;background:radial-gradient(circle at 30% 30%, rgba(52,211,153,.18), rgba(52,211,153,.06));flex-shrink:0;}
+.active-roommate-box.cancel .active-roommate-icon{border-color:rgba(167,139,250,.35);background:radial-gradient(circle at 30% 30%, rgba(167,139,250,.16), rgba(167,139,250,.05));}
+.active-roommate-title{font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px;}
+.active-roommate-box.cancel .active-roommate-title{color:var(--purple);}
+.active-roommate-desc{font-size:13px;color:var(--text2);}
+.active-roommate-meta{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:8px 18px;flex:1;min-width:260px;}
+.active-roommate-meta-item{font-size:13px;color:var(--text2);}
+.active-roommate-meta-item strong{color:var(--text);margin-right:6px;}
+.active-roommate-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.request-btn.disabled,.request-btn:disabled{background:rgba(139,143,168,.08);border-color:rgba(139,143,168,.18);color:var(--text3);cursor:not-allowed;transform:none;}
+.request-btn.state-active{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.35);color:var(--green);cursor:default;}
+.request-btn.state-cancel{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:var(--purple);cursor:default;}
+.request-btn.state-pending{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.28);color:var(--amber);cursor:default;}
+.match-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;font-family:var(--mono);font-size:10px;border:.5px solid var(--border2);margin-left:8px;}
+.match-chip.high{color:var(--green);border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.08);}
+.match-chip.extra{color:var(--amber);border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.08);}
+.req-status.auto_cancelled{color:var(--text3);background:rgba(139,143,168,.08);border-color:rgba(139,143,168,.22);}
+.req-note-muted{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;}
+
+.request-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border-radius:7px;border:.5px solid rgba(79,142,247,.35);background:rgba(79,142,247,.12);color:var(--accent);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:12px;}
+.request-btn:hover{background:rgba(79,142,247,.2);transform:translateY(-1px);}
+.request-btn.disabled:hover,.request-btn:disabled:hover{background:inherit;transform:none;}
+.match-actions{display:flex;justify-content:flex-end;margin-top:12px;}
+.request-box-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+.request-col{background:var(--surface2);border:.5px solid var(--border);border-radius:10px;padding:1rem;min-height:120px;}
+.request-col-title{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.75rem;}
+.req-item{background:var(--surface);border:.5px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:.75rem;font-size:13px;color:var(--text2);}
+.req-title{font-weight:800;color:var(--text);margin-bottom:4px;}
+.req-msg{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6;}
+.req-status{display:inline-flex;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:20px;border:.5px solid var(--border2);margin-top:8px;}
+.req-status.pending{color:var(--amber);background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);}
+.req-status.accepted{color:var(--green);background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);}
+.req-status.rejected{color:var(--red);background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.25);}
+.req-status.cancelled,.req-status.cancelled_agreed{color:var(--text3);background:rgba(139,143,168,.08);border-color:rgba(139,143,168,.22);}
+.req-status.cancel_requested{color:var(--purple);background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);}
+.req-actions{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+.req-actions button{border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;}
+.req-accept{background:rgba(52,211,153,.15);color:var(--green);border:.5px solid rgba(52,211,153,.3)!important;}
+.req-reject{background:rgba(248,113,113,.15);color:var(--red);border:.5px solid rgba(248,113,113,.3)!important;}
+.contact-note{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:50;align-items:center;justify-content:center;padding:1rem;}
+.modal-backdrop.show{display:flex;}
+.modal{background:var(--surface);border:.5px solid var(--border2);border-radius:14px;width:100%;max-width:430px;padding:1.35rem;box-shadow:0 18px 45px rgba(0,0,0,.4);}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:6px;}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6;}
+.modal textarea{width:100%;min-height:86px;resize:vertical;background:var(--surface2);border:.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:9px 12px;outline:none;}
+.modal textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;}
+.modal-actions .btn{margin-top:0;}
+@media(max-width:620px){.request-box-grid{grid-template-columns:1fr;}.modal-actions{flex-direction:column;}.active-roommate-main{align-items:flex-start;}.active-roommate-meta{grid-template-columns:1fr;}.active-roommate-box{padding:1rem;}}
+
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="site-header">
+  <div>
+    <h1>🏠 룸메이트 <span>매칭</span></h1>
+    <div class="subtitle">weighted-jaccard · primary-filter · redis-cache · hash[30]</div>
+    <div class="server-status" style="margin-top:8px">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">서버 연결 확인 중...</span>
+    </div>
+  </div>
+  <div class="badge-row">
+    <span class="hbadge hbadge-blue">HASH SIZE: 30</span>
+    <span class="hbadge hbadge-green">WEIGHTED JACCARD</span>
+    <span class="hbadge hbadge-purple">FASTAPI BACKEND</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('register',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    등록
+  </button>
+  <button class="tab-btn" onclick="showTab('match',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    매칭
+  </button>
+  <button class="tab-btn" onclick="showTab('table',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+    해시 테이블
+  </button>
+  <button class="tab-btn" onclick="showTab('redis',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    캐시
+  </button>
+  <button class="tab-btn" onclick="showTab('algo',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    알고리즘
+  </button>
+</div>
+
+<!-- 등록 -->
+<div id="panel-register" class="panel active">
+  <div id="reg-notif" class="notif"></div>
+
+  <div class="card">
+    <div class="card-title">기본 정보</div>
+    <div class="form-grid">
+      <div class="form-group"><label>학번 (KEY)</label><input type="text" id="student-id" placeholder="예: 2026XXXXXX" maxlength="10"/></div>
+      <div class="form-group"><label>이름</label><input type="text" id="name" placeholder="이름 입력"/></div>
+      <div class="form-group"><label>학과</label><input type="text" id="dept" placeholder="예: 컴퓨터공학과"/></div>
+      <div class="form-group"><label>성별</label>
+        <select id="gender"><option value="">선택</option><option>남</option><option>여</option></select>
+      </div>
+      <div class="form-group"><label>본인 흡연 여부</label>
+        <select id="smoke"><option value="">선택</option><option value="no">비흡연</option><option value="yes">흡연</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">연락수단 정보</div>
+    <div class="primary-note" style="color:var(--text3);">룸메 신청이 수락된 경우에만 상대에게 공개됩니다.</div>
+    <div class="form-grid">
+      <div class="form-group"><label>연락수단</label>
+        <select id="contact-type" onchange="updateRoomContactPlaceholder()">
+          <option value="">선택</option>
+          <option value="카카오톡 ID">카카오톡 ID</option>
+          <option value="카카오톡 오픈채팅">카카오톡 오픈채팅</option>
+          <option value="인스타 ID">인스타 ID</option>
+          <option value="이메일">이메일</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-group"><label>세부사항</label><input type="text" id="contact-detail" placeholder="연락수단을 먼저 선택해주세요"/></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🚨 Primary Filter — 절대 조건 (불일치 시 매칭 제외)</div>
+    <div class="primary-note">성별과 흡연 여부가 모두 동일한 사용자만 매칭 후보가 됩니다. 남자는 남자끼리, 여자는 여자끼리, 흡연자는 흡연자끼리, 비흡연자는 비흡연자끼리만 매칭됩니다.</div>
+    <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--border);">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:10px;letter-spacing:.06em;">⏰ 평균 생활 시간대 (매칭 유사도 계산에 사용)</div>
+      <div class="primary-grid">
+        <div class="form-group">
+          <label>평균 기상 시간</label>
+          <select id="wake-time">
+            <option value="">선택 안 함</option>
+            <option value="5">오전 5시 이전</option>
+            <option value="6">오전 6시</option>
+            <option value="7">오전 7시</option>
+            <option value="8">오전 8시</option>
+            <option value="9">오전 9시</option>
+            <option value="10">오전 10시</option>
+            <option value="11">오전 11시 이후</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>평균 취침 시간</label>
+          <select id="sleep-time">
+            <option value="">선택 안 함</option>
+            <option value="22">오후 10시 이전</option>
+            <option value="23">오후 11시</option>
+            <option value="24">자정 (00시)</option>
+            <option value="25">오전 1시</option>
+            <option value="26">오전 2시</option>
+            <option value="27">오전 3시 이후</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">생활 성향 체크리스트 (해당 항목 모두 선택)</div>
+    <div class="checklist-grid" id="checklist">
+      <div class="loading">// 서버에서 성향 목록을 불러오는 중...</div>
+    </div>
+  </div>
+
+  <div class="card" id="weight-card">
+    <div class="card-title">⚖️ 가중치 설정 — 체크한 항목만 표시 · 클릭하여 직접 입력 가능</div>
+    <div id="weight-rows-container">
+      <div class="empty-state" style="padding:1.5rem 0;font-size:12px;">// 위에서 생활 성향을 선택하면 가중치 항목이 나타납니다</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="reg-btn" onclick="registerUser()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    해시 테이블에 등록
+  </button>
+</div>
+
+<!-- 매칭 -->
+<div id="panel-match" class="panel">
+  <div class="card">
+    <div class="card-title">학번으로 매칭/요청함 조회</div>
+    <div class="match-search-row">
+      <div class="form-group"><label>내 학번</label><input type="text" id="match-id" placeholder="등록한 학번 입력" maxlength="10"/></div>
+      <button class="btn btn-primary" style="margin-top:0" onclick="searchRoommateAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        매칭/요청함 조회
+      </button>
+      <button class="btn btn-ghost" style="margin-top:0" onclick="refreshMatchTab()">
+        ↻ 새로고침
+      </button>
+    </div>
+  </div>
+  <div class="pipeline" id="pipeline" style="display:none">
+    <div class="pipe-step" id="ps1">① Primary Filter</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="ps2">② Cache GET</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="ps3">③ Weighted Jaccard</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="ps4">④ Cache SET</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="ps5">⑤ 정렬 &amp; 출력</div>
+  </div>
+  <div id="match-results"></div>
+
+  <div class="card">
+    <div class="card-title">룸메 요청함</div>
+    <input type="hidden" id="room-request-sid" />
+    <div class="contact-note">위에서 내 학번을 입력하고 <strong>매칭/요청함 조회</strong>를 누르면 받은 요청과 보낸 요청이 함께 표시됩니다. 수락된 보낸 요청에서만 상대 연락수단이 공개됩니다.</div>
+    <div class="request-box-grid">
+      <div class="request-col">
+        <div class="request-col-title">받은 요청</div>
+        <div id="room-received-list" class="empty-state" style="padding:1.2rem 0;">// 학번을 입력해 요청함을 확인하세요</div>
+      </div>
+      <div class="request-col">
+        <div class="request-col-title">보낸 요청</div>
+        <div id="room-sent-list" class="empty-state" style="padding:1.2rem 0;">// 학번을 입력해 요청함을 확인하세요</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 해시 테이블 -->
+<div id="panel-table" class="panel">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-total">-</div><div class="stat-lbl">등록 인원</div></div>
+    <div class="stat-box"><div class="stat-num">30</div><div class="stat-lbl">슬롯 수</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-used">-</div><div class="stat-lbl">사용 슬롯</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-load">-</div><div class="stat-lbl">부하율</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-cache">-</div><div class="stat-lbl">캐시 항목</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">해시 테이블 현황 · Primary (슬롯 0–9) / Secondary (슬롯 10–29)</div>
+    <div class="hash-table-container">
+      <div id="hash-table-view"><div class="loading">// 로딩 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 캐시 -->
+<div id="panel-redis" class="panel">
+  <div class="card">
+    <div class="card-title">In-Memory Cache — FastAPI 서버 내 TTL 캐시</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.7">
+      매칭 결과를 <code style="font-family:var(--mono);color:var(--accent)">match:{학번}</code> 키로 캐싱합니다.
+      동일 학번 재검색 시 Jaccard 연산 없이 캐시에서 즉시 반환합니다.
+      <strong style="color:var(--amber)">TTL: 60초</strong> 후 자동 만료됩니다.
+    </p>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;">
+      <button class="btn btn-primary btn-sm" onclick="flushCache()">FLUSHALL</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadCacheTab()">새로고침</button>
+    </div>
+    <div id="cache-view"><div class="loading">// 로딩 중...</div></div>
+  </div>
+</div>
+
+<!-- 알고리즘 -->
+<div id="panel-algo" class="panel">
+  <div class="card">
+    <div class="card-title">해시 함수</div>
+    <div class="algo-box">
+      <strong>h(studentId)</strong> = Σ ( charCode[i] × 31 ) % 30<br><br>
+      다항 롤링 해시 — 소수 31의 거듭제곱을 각 문자에 곱해<br>
+      0~29 슬롯에 균등 분배합니다. 충돌은 Separate Chaining으로 처리.
+    </div>
+    <div class="card-title" style="margin-top:1rem">파티션 전략</div>
+    <div class="algo-box">
+      <strong>Primary Filter</strong> : 본인 성별과 흡연 여부가 모두 같은 사용자만 후보로 통과<br>
+      <strong>Secondary Partition</strong> (슬롯 10–29) : 일반 성향 데이터<br><br>
+      Primary Filter 통과 후 생활 성향과 생활 시간대 기반 Secondary 유사도 계산 →<br>
+      전수 조사 대상을 대폭 축소하여 연산 부담 감소
+    </div>
+    <div class="card-title" style="margin-top:1rem">가중 Jaccard 유사도</div>
+    <div class="algo-box">
+      <span class="formula">score(A,B) = Σ w(t)·[t∈A∩B] / Σ w(t)·[t∈A∪B]</span><br><br>
+      각 성향 t에 가중치 w(t)를 곱해 중요 항목의 일치를 더 크게 반영.<br>
+      기본 Jaccard보다 사용자 만족도 높은 결과를 제공합니다.<br><br>
+      청결·공부 등 중요 성향은 최대 ×2.0까지 조정 · 나머지 기본 ×1.0<br>
+      결과값 ≥ 0.8 → 매칭 성공 판정<br><br>
+      <span style="color:var(--amber)">+ 기상/취침 시간 유사도 보정 · 흡연 여부는 절대 조건으로 동일한 사람끼리만 매칭</span>
+    </div>
+    <div class="card-title" style="margin-top:1rem">캐싱 전략</div>
+    <div class="algo-box">
+      <strong>SET</strong> match:{sid} &lt;결과JSON&gt; TTL 60s<br><br>
+      캐시 HIT  → O(1) 즉시 반환 (ms 단위 응답)<br>
+      캐시 MISS → Primary Filter → Weighted Jaccard → SET 저장<br>
+      TTL 60초 후 자동 만료 → 새 등록자 자동 반영
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">라이브 해시 계산기 (서버 연산)</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>학번 입력</label>
+      <input type="text" id="calc-id" placeholder="학번을 입력하면 슬롯이 계산됩니다" maxlength="10" oninput="calcHash()"/>
+    </div>
+    <div id="calc-result" class="algo-box" style="min-height:60px">// 학번을 입력하세요</div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-backdrop" id="room-request-modal">
+  <div class="modal">
+    <div class="modal-title">룸메 신청</div>
+    <div class="modal-desc" id="room-request-target-label">상대에게 룸메 신청을 보냅니다.</div>
+    <input type="hidden" id="room-target-sid" />
+    <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="form-group"><label>내 학번</label><input type="text" id="room-requester-sid" maxlength="10" placeholder="매칭/요청함 조회 학번 자동 입력" readonly/></div>
+      <div class="form-group"><label>내 이름</label><input type="text" id="room-requester-name" placeholder="이름"/></div>
+    </div>
+    <div class="form-group" style="margin-top:10px;">
+      <label>메시지</label>
+      <textarea id="room-request-message" placeholder="예: 생활패턴이 비슷해서 룸메 신청드립니다."></textarea>
+    </div>
+    <div class="contact-note">요청이 수락되면 상대의 연락수단을 확인할 수 있습니다.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRoommateRequestModal()">취소</button>
+      <button class="btn btn-primary" onclick="sendRoommateRequest()">신청 보내기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+
+const TRAIT_ICONS = {
+  quiet:'🔇', social:'🤝', clean:'✨',
+  eat_out:'🍽️', drink:'🍺', study:'📚', game:'🎮', share:'🔄',
+  guest:'🚪', fashion:'👗', boardgame:'🎲', gym:'🏋️', soccer:'⚽',
+  beauty:'💄', foodie:'🗺️',
+};
+
+const WEIGHT_ROW_META = [
+  { keys:['clean'],    label:'✨ 청결 중시' },
+  { keys:['study'],    label:'📚 방에서 공부' },
+  { keys:['quiet'],    label:'🔇 조용한 환경' },
+  { keys:['social'],   label:'🤝 사교적' },
+  { keys:['eat_out'],  label:'🍽️ 외식 선호' },
+  { keys:['drink'],    label:'🍺 애주가' },
+  { keys:['game'],     label:'🎮 게임/취미' },
+  { keys:['share'],    label:'🔄 물건 공유 OK' },
+  { keys:['guest'],    label:'🚪 손님 초대 OK' },
+  { keys:['fashion'],  label:'👗 패션' },
+  { keys:['boardgame'],label:'🎲 보드게임' },
+  { keys:['gym'],      label:'🏋️ 헬스' },
+  { keys:['soccer'],   label:'⚽ 축구' },
+  { keys:['beauty'],   label:'💄 뷰티' },
+  { keys:['foodie'],   label:'🗺️ 맛집탐방' },
+];
+
+let localWeights = {};
+let currentMatchResults = [];
+let currentRoomSid = '';
+let currentMatchData = null;
+let currentRoomRequests = { received: [], sent: [] };
+let currentUserName = '';
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function maskSid(sid) {
+  const s = String(sid || '');
+  if (s.length <= 6) return s;
+  return s.slice(0,4) + '****' + s.slice(-2);
+}
+function statusText(status) {
+  const map = {
+    pending: '대기중',
+    accepted: '룸메 예정',
+    rejected: '거절됨',
+    cancelled: '취소됨',
+    auto_cancelled: '자동 종료',
+    cancel_requested: '취소 요청 중',
+    cancelled_agreed: '합의 취소됨'
+  };
+  return map[status] || status;
+}
+function updateRoomContactPlaceholder() {
+  const type = document.getElementById('contact-type')?.value || '';
+  const input = document.getElementById('contact-detail');
+  if (!input) return;
+  const ph = {
+    '카카오톡 ID':'예: kakao_id',
+    '카카오톡 오픈채팅':'예: https://open.kakao.com/o/...',
+    '인스타 ID':'예: @instagram_id',
+    '이메일':'예: example@email.com',
+    '기타':'연락 가능한 방법을 입력하세요'
+  };
+  input.placeholder = ph[type] || '연락수단을 먼저 선택해주세요';
+}
+
+function validateContactDetail(type, detail) {
+  const value = String(detail || '').trim();
+  if (!type || !value) return false;
+  if (type === '이메일') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  if (type === '카카오톡 오픈채팅') return /open\.kakao\.com\//.test(value) || /^https?:\/\//.test(value);
+  if (type === '인스타 ID') return value.length >= 2;
+  if (type === '카카오톡 ID') return !/\s/.test(value) && value.length >= 2;
+  return true;
+}
+
+function buildActiveRequestContext() {
+  const all = [...(currentRoomRequests.received || []), ...(currentRoomRequests.sent || [])];
+  const item = all.find(r => r.status === 'accepted' || r.status === 'cancel_requested');
+  if (!item) return null;
+  const isRequester = item.requesterSid === currentRoomSid;
+  return {
+    ...item,
+    isRequester,
+    counterpartSid: isRequester ? item.targetSid : item.requesterSid,
+    counterpartName: item.counterpartName || (isRequester ? item.targetName : item.requesterName),
+    counterpartDept: item.counterpartDept || (isRequester ? item.targetDept : item.requesterDept),
+    counterpartContactType: item.contactType || item.counterpartContactType || '기타',
+    counterpartContactDetail: item.contactDetail || item.counterpartContactDetail || ''
+  };
+}
+
+function findPairRequest(candidateSid) {
+  const all = [...(currentRoomRequests.received || []), ...(currentRoomRequests.sent || [])];
+  return all.find(r => {
+    const a = r.requesterSid, b = r.targetSid;
+    return (a === currentRoomSid && b === candidateSid) || (a === candidateSid && b === currentRoomSid);
+  }) || null;
+}
+
+function renderActiveRoommateBox(active) {
+  if (!active) return '';
+  if (active.status === 'accepted') {
+    return `<div class="active-roommate-box">
+      <div class="active-roommate-main">
+        <div class="active-roommate-icon">👥</div>
+        <div>
+          <div class="active-roommate-title">현재 룸메 예정 상태입니다</div>
+          <div class="active-roommate-desc">룸메 매칭이 완료되었습니다. 새로운 룸메 신청은 불가능합니다.</div>
+        </div>
+      </div>
+      <div class="active-roommate-meta">
+        <div class="active-roommate-meta-item"><strong>상대:</strong> ${escapeHtml(active.counterpartName || '-')}</div>
+        <div class="active-roommate-meta-item"><strong>연락수단:</strong> ${escapeHtml(active.counterpartContactType || '-')}</div>
+        <div class="active-roommate-meta-item"><strong>학과:</strong> ${escapeHtml(active.counterpartDept || '학과 미입력')}</div>
+        <div class="active-roommate-meta-item"><strong>상세:</strong> ${escapeHtml(active.counterpartContactDetail || '-')}</div>
+      </div>
+      <div class="active-roommate-actions">
+        <button class="request-btn" style="margin-top:0;border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.12);color:var(--red);" onclick="requestCancelRoommate('${active.id}')">룸메 취소 요청</button>
+      </div>
+    </div>`;
+  }
+  const incoming = active.cancelRequestedBy && active.cancelRequestedBy !== currentRoomSid;
+  return `<div class="active-roommate-box cancel">
+    <div class="active-roommate-main">
+      <div class="active-roommate-icon">⏳</div>
+      <div>
+        <div class="active-roommate-title">${incoming ? '상대가 룸메 예정 취소를 요청했습니다' : '룸메 취소 요청을 보낸 상태입니다'}</div>
+        <div class="active-roommate-desc">${incoming ? '동의하면 합의 취소되며, 유지하면 현재 룸메 예정 상태가 계속됩니다.' : '상대방의 동의가 있어야 합의 취소가 완료됩니다. 완료 전까지 새 룸메 신청은 불가능합니다.'}</div>
+      </div>
+    </div>
+    <div class="active-roommate-meta">
+      <div class="active-roommate-meta-item"><strong>상대:</strong> ${escapeHtml(active.counterpartName || '-')}</div>
+      <div class="active-roommate-meta-item"><strong>연락수단:</strong> ${escapeHtml(active.counterpartContactType || '-')}</div>
+      <div class="active-roommate-meta-item"><strong>학과:</strong> ${escapeHtml(active.counterpartDept || '학과 미입력')}</div>
+      <div class="active-roommate-meta-item"><strong>상세:</strong> ${escapeHtml(active.counterpartContactDetail || '-')}</div>
+    </div>
+    <div class="active-roommate-actions">
+      ${incoming
+        ? `<button class="request-btn" style="margin-top:0;border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.12);color:var(--green);" onclick="respondCancelRoommate('${active.id}','agree')">취소 동의</button>
+           <button class="request-btn" style="margin-top:0;border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.12);color:var(--red);" onclick="respondCancelRoommate('${active.id}','keep')">유지</button>`
+        : `<button class="request-btn state-cancel" style="margin-top:0;" disabled>상대 동의 대기 중</button>`}
+    </div>
+  </div>`;
+}
+
+function buildCandidateAction(matchObj, idx, active) {
+  if (active) {
+    if (active.counterpartSid === matchObj.sid) {
+      const text = active.status === 'accepted' ? '룸메 예정' : '취소 요청 중';
+      const cls = active.status === 'accepted' ? 'state-active' : 'state-cancel';
+      return `<button class="request-btn ${cls}" disabled>${text}</button>`;
+    }
+    return `<button class="request-btn disabled" disabled>신청 불가</button>`;
+  }
+  const pair = findPairRequest(matchObj.sid);
+  if (pair && pair.status === 'pending') {
+    return `<button class="request-btn state-pending" disabled>대기 중</button>`;
+  }
+  return `<button class="request-btn" onclick="openRoommateRequestModal(${idx})">룸메 신청</button>`;
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+  return data;
+}
+
+async function checkServer() {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  try {
+    await api('GET', '/meta/traits');
+    dot.className  = 'status-dot ok';
+    text.textContent = `서버 연결됨 · ${API}`;
+  } catch {
+    dot.className  = 'status-dot err';
+    text.textContent = `서버 연결 실패 — ${API} 확인 필요`;
+  }
+}
+
+async function initChecklist() {
+  try {
+    const data = await api('GET', '/meta/traits');
+    data.traits.forEach(t => { localWeights[t.key] = t.weight; });
+
+    const grid = document.getElementById('checklist');
+    grid.innerHTML = data.traits.map(t => `
+      <div class="check-item" data-key="${t.key}" onclick="toggleCheck(this)">
+        <span class="icon">${TRAIT_ICONS[t.key] || '•'}</span>
+        ${t.label}
+        <span class="w-badge">×<span class="wv">${t.weight.toFixed(1)}</span></span>
+      </div>`).join('');
+  } catch (e) {
+    document.getElementById('checklist').innerHTML =
+      `<div class="empty-state">// 서버 연결 필요: ${e.message}</div>`;
+  }
+}
+
+function renderWeightRows() {
+  const selected  = getSelectedTraits();
+  const container = document.getElementById('weight-rows-container');
+  if (!selected.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:1.5rem 0;font-size:12px;">// 위에서 생활 성향을 선택하면 가중치 항목이 나타납니다</div>';
+    return;
+  }
+  const rendered = new Set();
+  let html = '';
+  WEIGHT_ROW_META.forEach(meta => {
+    if (!meta.keys.some(k => selected.includes(k))) return;
+    const keyStr = meta.keys.join(',');
+    if (rendered.has(keyStr)) return;
+    rendered.add(keyStr);
+    const w        = localWeights[meta.keys[0]] ?? 1.0;
+    const sliderV  = Math.round(w * 10);
+    const critCls  = meta.critical ? ' critical' : '';
+    const accentColor = meta.critical ? 'var(--red)' : 'var(--amber)';
+    html += `<div class="weight-row${critCls}">
+      <span class="wlabel">${meta.label}</span>
+      <input type="range" min="10" max="20" step="1" value="${sliderV}"
+        style="flex:1;max-width:130px;accent-color:${accentColor}"
+        oninput="onSlider('${keyStr}',this.value,this)"/>
+      <div class="wval-wrap">
+        <input class="wval-input" value="×${w.toFixed(1)}"
+          title="클릭하여 직접 입력 (1.0 ~ 2.0)"
+          onblur="onWeightInput('${keyStr}',this)"
+          onkeydown="if(event.key==='Enter')onWeightInput('${keyStr}',this)"/>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html || '<div class="empty-state" style="padding:1.5rem 0;font-size:12px;">// 해당 항목 없음</div>';
+}
+
+async function onSlider(keyStr, rawVal, input) {
+  const keys = keyStr.split(',');
+  const w    = parseFloat(rawVal) / 10;
+  keys.forEach(k => { localWeights[k] = w; });
+  const row  = input.closest('.weight-row');
+  if (row) { const inp = row.querySelector('.wval-input'); if(inp) inp.value = '×' + w.toFixed(1); }
+  updateCheckBadges(keys, w);
+  await syncWeights(keys, w);
+}
+
+async function onWeightInput(keyStr, inputEl) {
+  const keys = keyStr.split(',');
+  let w = parseFloat(inputEl.value.replace(/[×x\s]/g, ''));
+  if (isNaN(w) || w < 1.0) w = 1.0;
+  if (w > 2.0) w = 2.0;
+  w = Math.round(w * 10) / 10;
+  inputEl.value = '×' + w.toFixed(1);
+  keys.forEach(k => { localWeights[k] = w; });
+  const row = inputEl.closest('.weight-row');
+  if (row) { const sl = row.querySelector('input[type=range]'); if(sl) sl.value = Math.round(w*10); }
+  updateCheckBadges(keys, w);
+  await syncWeights(keys, w);
+}
+
+async function syncWeights(keys, w) {
+  const payload = {};
+  keys.forEach(k => { payload[k] = w; });
+  try { await api('PUT', '/weights', { weights: payload }); }
+  catch (e) { console.warn('가중치 동기화 실패:', e.message); }
+}
+
+function updateCheckBadges(keys, w) {
+  keys.forEach(k => {
+    document.querySelectorAll(`.check-item[data-key="${k}"] .wv`)
+      .forEach(el => { el.textContent = w.toFixed(1); });
+  });
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+  renderWeightRows();
+}
+function getSelectedTraits() {
+  return [...document.querySelectorAll('.check-item.selected')].map(e => e.dataset.key);
+}
+
+function showNotif(msg, ok) {
+  const el = document.getElementById('reg-notif');
+  el.textContent = (ok ? '✓  ' : '✗  ') + msg;
+  el.className   = 'notif ' + (ok ? 'show-ok' : 'show-err');
+  setTimeout(() => { el.className = 'notif'; }, 3200);
+}
+
+async function registerUser() {
+  const btn    = document.getElementById('reg-btn');
+  const sid    = document.getElementById('student-id').value.trim();
+  const name   = document.getElementById('name').value.trim();
+  const traits = getSelectedTraits();
+  if (!sid || sid.length !== 10) return showNotif('학번 10자리를 정확히 입력해주세요', false);
+  if (!name)                  return showNotif('이름을 입력해주세요', false);
+  if (!document.getElementById('gender').value) return showNotif('본인의 성별을 선택해주세요', false);
+  if (!document.getElementById('smoke').value) return showNotif('본인의 흡연 여부를 선택해주세요', false);
+  if (!document.getElementById('contact-type').value) return showNotif('연락수단을 선택해주세요', false);
+  if (!document.getElementById('contact-detail').value.trim()) return showNotif('연락수단 세부사항을 입력해주세요', false);
+  if (!validateContactDetail(document.getElementById('contact-type').value, document.getElementById('contact-detail').value.trim())) return showNotif('선택한 연락수단 형식에 맞게 세부사항을 입력해주세요', false);
+  if (traits.length < 2)      return showNotif('성향을 2개 이상 선택해주세요', false);
+
+  btn.disabled = true;
+  try {
+    const res = await api('POST', '/users', {
+      sid,
+      name,
+      dept:       document.getElementById('dept').value.trim(),
+      gender:     document.getElementById('gender').value,
+      smoke:      document.getElementById('smoke').value,
+      contactType: document.getElementById('contact-type').value,
+      contactDetail: document.getElementById('contact-detail').value.trim(),
+      traits,
+      wake_time:  document.getElementById('wake-time').value  ? parseInt(document.getElementById('wake-time').value)  : null,
+      sleep_time: document.getElementById('sleep-time').value ? parseInt(document.getElementById('sleep-time').value) : null,
+    });
+    showNotif(`${res.message} (슬롯 [${res.slot}] · ${res.partition})`, true);
+    ['student-id','name','dept','contact-detail'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('gender').value    = '';
+    document.getElementById('smoke').value     = '';
+    document.getElementById('contact-type').value = '';
+    updateRoomContactPlaceholder();
+    document.getElementById('wake-time').value  = '';
+    document.getElementById('sleep-time').value = '';
+    document.querySelectorAll('.check-item.selected').forEach(e => e.classList.remove('selected'));
+    renderWeightRows();
+  } catch (e) {
+    showNotif(e.message, false);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function refreshMatchTab() {
+  document.getElementById('match-id').value = '';
+  document.getElementById('match-results').innerHTML = '<div class="card"><div class="empty-state">// 학번을 입력하고 매칭/요청함 조회를 눌러주세요</div></div>';
+  document.getElementById('room-request-sid').value = '';
+  document.getElementById('room-received-list').innerHTML = '<div class="empty-state" style="padding:1.2rem 0;">// 학번을 입력해 요청함을 확인하세요</div>';
+  document.getElementById('room-sent-list').innerHTML = '<div class="empty-state" style="padding:1.2rem 0;">// 학번을 입력해 요청함을 확인하세요</div>';
+  document.getElementById('pipeline').style.display = 'none';
+  document.querySelectorAll('.pipe-step').forEach(s => s.classList.remove('active','done'));
+  document.getElementById('room-target-sid').value = '';
+  document.getElementById('room-requester-sid').value = '';
+  document.getElementById('room-requester-name').value = '';
+  document.getElementById('room-request-message').value = '';
+  currentMatchResults = [];
+  currentRoomSid = '';
+  currentMatchData = null;
+  currentRoomRequests = { received: [], sent: [] };
+  currentUserName = '';
+}
+
+async function searchRoommateAll() {
+  const sid = document.getElementById('match-id').value.trim();
+  if (sid.length !== 10) return alert('내 학번 10자리를 입력해주세요.');
+  currentRoomSid = sid;
+  document.getElementById('room-request-sid').value = sid;
+  await findMatches();
+  await fetchRoommateRequests();
+}
+
+async function findMatches() {
+  const sid       = document.getElementById('match-id').value.trim();
+  const container = document.getElementById('match-results');
+  if (!sid) return;
+
+  container.innerHTML = '<div class="loading">// 매칭 중...</div>';
+  animatePipeline();
+
+  try {
+    const data = await api('GET', `/match/${sid}`);
+    renderResults(data);
+  } catch (e) {
+    currentMatchResults = [];
+    container.innerHTML = `<div class="card"><div class="empty-state">// ${escapeHtml(e.message)}</div></div>`;
+  }
+}
+
+function renderResults(data) {
+  const { me, slot, results, cache_status, elapsed_ms } = data;
+  currentMatchData = data;
+  currentUserName = me?.name || '';
+  currentMatchResults = results || [];
+  const isHit   = cache_status.startsWith('HIT');
+  const high    = results.filter(m => m.score >= 0.8);
+  const below   = results.filter(m => m.score < 0.8).slice(0, 3);
+  const show    = [...high, ...below];
+  const active  = buildActiveRequestContext();
+
+  const WAKE_LABELS  = {5:'5시↑',6:'6시',7:'7시',8:'8시',9:'9시',10:'10시',11:'11시↓'};
+  const SLEEP_LABELS = {22:'22시↑',23:'23시',24:'0시',25:'1시',26:'2시',27:'3시↓'};
+
+  let html = `<div class="match-section-label">
+    ${escapeHtml(me.name)}님 · 슬롯[${slot}] · 80% 이상 ${high.length}명 · 추가 후보 최대 3명
+    <span class="cache-badge ${isHit ? 'cb-hit' : 'cb-miss'}">${isHit ? '⚡ CACHE HIT' : '✓ DB SCAN'}</span>
+    <span class="ms-badge">${elapsed_ms}ms</span>
+  </div>`;
+
+  if (active) html += renderActiveRoommateBox(active);
+
+  if (!show.length) {
+    html += '<div class="card"><div class="empty-state">// 성별과 흡연 여부 절대 조건을 통과한 매칭 상대가 없습니다</div></div>';
+  } else {
+    show.forEach((m, idx) => {
+      const pct      = m.score_pct;
+      const cls      = m.score >= 0.8 ? 'high' : m.score >= 0.5 ? 'mid' : '';
+      const scoreCls = m.score >= 0.8 ? 'score-high' : m.score >= 0.5 ? 'score-mid' : 'score-low';
+      const barCls   = m.score >= 0.8 ? 'bar-high'   : m.score >= 0.5 ? 'bar-mid'   : 'bar-low';
+      const wakeStr  = m.wake_time  ? `기상 ${WAKE_LABELS[m.wake_time] || m.wake_time+'시'}`   : '';
+      const sleepStr = m.sleep_time ? `취침 ${SLEEP_LABELS[m.sleep_time] || m.sleep_time+'시'}` : '';
+      const timeStr  = [wakeStr, sleepStr].filter(Boolean).join(' · ');
+      const chip = m.score >= 0.8 ? '<span class="match-chip high">추천 후보</span>' : '<span class="match-chip extra">추가 후보</span>';
+      html += `
+      <div class="match-card ${cls}">
+        <div class="match-top">
+          <div>
+            <div class="match-name">${escapeHtml(m.name)} ${chip}</div>
+            <div class="match-meta">${escapeHtml(m.dept || '학과 미입력')} · <span class="sid-code">${maskSid(m.sid)}</span> · 슬롯[${m.slot}]${m.smoke ? ' · <span style="color:var(--green);font-size:10px;">'+(m.smoke === 'yes' ? '흡연' : '비흡연')+'</span>' : ''}${timeStr ? ' · <span style="color:var(--accent);font-size:10px;">'+timeStr+'</span>' : ''}</div>
+          </div>
+          <div class="match-score ${scoreCls}">${pct}%<small>가중 유사도</small></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${barCls}" style="width:${pct}%"></div></div>
+        <div class="tags">
+          ${(m.heavy_shared  || []).map(t => `<span class="tag weighted">★ ${escapeHtml(t)}</span>`).join('')}
+          ${((m.shared_traits||[]).filter(t => !(m.heavy_shared||[]).includes(t))).map(t => `<span class="tag shared">✓ ${escapeHtml(t)}</span>`).join('')}
+          ${(m.unique_traits || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+        <div class="match-actions">${buildCandidateAction(m, idx, active)}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('match-results').innerHTML = html;
+}
+
+function animatePipeline() {
+  const pl = document.getElementById('pipeline');
+  pl.style.display = 'flex';
+  const ids = ['ps1','ps2','ps3','ps4','ps5'];
+  ids.forEach((id, i) => {
+    setTimeout(() => {
+      document.querySelectorAll('.pipe-step').forEach(s => {
+        if (s.classList.contains('active')) s.classList.replace('active','done');
+      });
+      document.getElementById(id)?.classList.add('active');
+    }, i * 320);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.pipe-step').forEach(s => s.classList.replace('active','done'));
+  }, ids.length * 320 + 200);
+}
+
+async function loadTableTab() {
+  document.getElementById('hash-table-view').innerHTML = '<div class="loading">// 로딩 중...</div>';
+  try {
+    const data = await api('GET', '/table');
+    document.getElementById('stat-total').textContent = data.total_users;
+    document.getElementById('stat-used').textContent  = data.used_slots;
+    document.getElementById('stat-load').textContent  = data.load_factor + '%';
+
+    const cacheData = await api('GET', '/cache');
+    document.getElementById('stat-cache').textContent = cacheData.size;
+
+    if (!data.slots.length) {
+      document.getElementById('hash-table-view').innerHTML = '<div class="empty-state">// 아직 등록된 사용자가 없습니다</div>';
+      return;
+    }
+    let rows = '';
+    data.slots.forEach(slot => {
+      slot.users.forEach(u => {
+        rows += `<tr>
+          <td><span class="slot-badge">[${slot.slot}]</span>${slot.partition === 'Primary' ? '<span class="pf-tag">Primary</span>' : ''}</td>
+          <td class="sid-code">${maskSid(u.sid)}</td>
+          <td>${u.chain_index > 0 ? '<span class="chain-dot" title="체이닝"></span>' : ''}${escapeHtml(u.name)}</td>
+          <td style="color:var(--text2)">${escapeHtml(u.dept || '-')}</td>
+          <td style="color:var(--text2)">${escapeHtml(u.gender || '-')}</td>
+          <td style="color:var(--text2)">${u.smoke === 'yes' ? '흡연' : (u.smoke === 'no' ? '비흡연' : '-')}</td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${slot.count}명</td>
+          <td><button onclick="deleteUser('${u.sid}','${escapeHtml(u.name)}')" style="background:rgba(248,113,113,.15);color:var(--red);border:.5px solid rgba(248,113,113,.3);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:var(--mono);">삭제</button></td>
+        </tr>`;
+      });
+    });
+    document.getElementById('hash-table-view').innerHTML = `
+      <table class="hash-table">
+        <thead><tr><th>슬롯</th><th>학번(KEY)</th><th>이름</th><th>학과</th><th>성별</th><th>흡연</th><th>슬롯 인원</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } catch (e) {
+    document.getElementById('hash-table-view').innerHTML = `<div class="empty-state">// 오류: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadCacheTab() {
+  document.getElementById('cache-view').innerHTML = '<div class="loading">// 로딩 중...</div>';
+  try {
+    const data = await api('GET', '/cache');
+    if (!data.items.length) {
+      document.getElementById('cache-view').innerHTML = '<div class="empty-state">// 캐시가 비어 있습니다</div>';
+      return;
+    }
+    let html = '<table class="hash-table"><thead><tr><th>KEY</th><th>결과 수</th><th>TTL</th></tr></thead><tbody>';
+    data.items.forEach(item => {
+      const color = item.ttl > 30 ? 'var(--green)' : 'var(--amber)';
+      html += `<tr>
+        <td class="sid-code">${escapeHtml(item.key)}</td>
+        <td style="color:var(--text2)">${item.count}명</td>
+        <td style="font-family:var(--mono);font-size:12px;color:${color}">${item.ttl}s</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('cache-view').innerHTML = html;
+  } catch (e) {
+    document.getElementById('cache-view').innerHTML = `<div class="empty-state">// 오류: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function flushCache() {
+  try {
+    await api('DELETE', '/cache');
+    await loadCacheTab();
+  } catch (e) { console.warn(e.message); }
+}
+
+async function deleteUser(sid, name) {
+  const confirmSid = prompt(`${name}님의 등록 정보를 삭제하려면 본인 학번 10자리를 입력하세요.`);
+  if (confirmSid === null) return;
+  const trimmed = confirmSid.trim();
+  if (trimmed.length !== 10) return alert('학번 10자리를 입력해주세요.');
+  if (!confirm(`${name} (${maskSid(sid)}) 등록 정보를 삭제할까요?`)) return;
+  try {
+    await api('DELETE', `/users/${encodeURIComponent(sid)}?confirmSid=${encodeURIComponent(trimmed)}`);
+    await loadTableTab();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
+}
+
+function openRoommateRequestModal(index) {
+  const target = currentMatchResults[index];
+  if (!target) return;
+  const mySid = currentRoomSid || document.getElementById('match-id').value.trim();
+  if (mySid.length !== 10) return alert('먼저 내 학번으로 매칭/요청함 조회를 해주세요.');
+  document.getElementById('room-target-sid').value = target.sid;
+  document.getElementById('room-request-target-label').textContent = `${target.name}님에게 룸메 신청을 보냅니다.`;
+  const sidInput = document.getElementById('room-requester-sid');
+  sidInput.value = mySid;
+  sidInput.readOnly = true;
+  document.getElementById('room-requester-name').value = currentUserName || '';
+  document.getElementById('room-request-modal').classList.add('show');
+}
+
+function closeRoommateRequestModal() {
+  document.getElementById('room-request-modal').classList.remove('show');
+}
+
+async function sendRoommateRequest() {
+  const targetSid = document.getElementById('room-target-sid').value;
+  const requesterSid = document.getElementById('room-requester-sid').value.trim();
+  const requesterName = document.getElementById('room-requester-name').value.trim();
+  const message = document.getElementById('room-request-message').value.trim();
+  if (requesterSid.length !== 10) return alert('내 학번 10자리를 입력해주세요.');
+  if (!requesterName) return alert('내 이름을 입력해주세요.');
+  try {
+    const res = await api('POST', '/api/roommate/request', { targetSid, requesterSid, requesterName, message });
+    alert(res.message || '룸메 신청을 보냈습니다.');
+    closeRoommateRequestModal();
+    document.getElementById('room-request-message').value = '';
+    if (requesterSid === currentRoomSid) await fetchRoommateRequests();
+  } catch (e) {
+    alert('신청 실패: ' + e.message);
+  }
+}
+
+async function fetchRoommateRequests() {
+  const sid = document.getElementById('room-request-sid').value.trim() || document.getElementById('match-id').value.trim();
+  if (sid.length !== 10) return;
+  currentRoomSid = sid;
+  const received = document.getElementById('room-received-list');
+  const sent = document.getElementById('room-sent-list');
+  received.innerHTML = '<div class="loading">// 받은 요청 조회 중...</div>';
+  sent.innerHTML = '<div class="loading">// 보낸 요청 조회 중...</div>';
+  try {
+    const data = await api('GET', `/api/roommate/requests/${encodeURIComponent(sid)}`);
+    currentRoomRequests = data;
+    renderRoommateRequests(data);
+    if (currentMatchData) renderResults(currentMatchData);
+  } catch (e) {
+    currentRoomRequests = { received: [], sent: [] };
+    received.innerHTML = `<div class="empty-state" style="padding:1.2rem 0;">// ${escapeHtml(e.message)}</div>`;
+    sent.innerHTML = `<div class="empty-state" style="padding:1.2rem 0;">// ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function requestActions(r, mode) {
+  const sid = currentRoomSid;
+  if (r.status === 'pending' && mode === 'received') {
+    return `<div class="req-actions"><button class="req-accept" onclick="respondRoommateRequest('${r.id}','accepted')">수락</button><button class="req-reject" onclick="respondRoommateRequest('${r.id}','rejected')">거절</button></div>`;
+  }
+  if (r.status === 'pending' && mode === 'sent') {
+    return `<div class="req-actions"><button class="req-reject" onclick="cancelPendingRoommateRequest('${r.id}')">신청 취소</button></div>`;
+  }
+  if (r.status === 'accepted') {
+    return `<div class="req-actions"><button class="req-reject" onclick="requestCancelRoommate('${r.id}')">룸메 취소 요청</button></div>`;
+  }
+  if (r.status === 'cancel_requested') {
+    if (r.cancelRequestedBy && r.cancelRequestedBy !== sid) {
+      return `<div class="contact-note">상대가 룸메 예정 취소를 요청했습니다. 동의하면 합의 취소됩니다.</div>
+              <div class="req-actions"><button class="req-accept" onclick="respondCancelRoommate('${r.id}','agree')">취소 동의</button><button class="req-reject" onclick="respondCancelRoommate('${r.id}','keep')">유지</button></div>`;
+    }
+    return `<div class="contact-note">내가 취소 요청을 보냈습니다. 상대방의 동의를 기다리는 중입니다.</div>`;
+  }
+  return '';
+}
+
+function renderRoommateRequests(data) {
+  const receivedEl = document.getElementById('room-received-list');
+  const sentEl = document.getElementById('room-sent-list');
+  const received = data.received || [];
+  const sent = data.sent || [];
+
+  receivedEl.innerHTML = received.length ? received.map(r => `
+    <div class="req-item">
+      <div class="req-title">${escapeHtml(r.requesterName)}님이 룸메 신청을 보냈습니다.</div>
+      <div>${escapeHtml(r.requesterDept || '학과 미입력')} · <span class="sid-code">${maskSid(r.requesterSid)}</span></div>
+      ${r.message ? `<div class="req-msg">“${escapeHtml(r.message)}”</div>` : ''}
+      <span class="req-status ${escapeHtml(r.status)}">${statusText(r.status)}</span>
+      ${r.status === 'accepted' ? `<div class="contact-note">룸메 예정 · 상대가 내 연락수단을 확인할 수 있습니다.</div>` : ''}
+      ${r.status === 'auto_cancelled' ? `<div class="req-note-muted">상대가 다른 룸메와 예정되어 요청이 자동 종료되었습니다.</div>` : ''}
+      ${requestActions(r, 'received')}
+    </div>`).join('') : '<div class="empty-state" style="padding:1.2rem 0;">// 받은 요청이 없습니다</div>';
+
+  sentEl.innerHTML = sent.length ? sent.map(r => `
+    <div class="req-item">
+      <div class="req-title">${escapeHtml(r.targetName)}님에게 보낸 룸메 신청</div>
+      <div>${escapeHtml(r.targetDept || '학과 미입력')} · <span class="sid-code">${maskSid(r.targetSid)}</span></div>
+      ${r.message ? `<div class="req-msg">“${escapeHtml(r.message)}”</div>` : ''}
+      <span class="req-status ${escapeHtml(r.status)}">${statusText(r.status)}</span>
+      ${r.status === 'accepted' && r.contactDetail ? `<div class="req-msg"><strong style="color:var(--green);">상대 연락수단</strong><br>${escapeHtml(r.contactType || '기타')}: ${escapeHtml(r.contactDetail)}</div>` : ''}
+      ${r.status === 'auto_cancelled' ? `<div class="req-note-muted">상대가 다른 룸메와 예정되어 요청이 자동 종료되었습니다.</div>` : ''}
+      ${requestActions(r, 'sent')}
+    </div>`).join('') : '<div class="empty-state" style="padding:1.2rem 0;">// 보낸 요청이 없습니다</div>';
+}
+
+async function respondRoommateRequest(id, status) {
+  try {
+    await api('POST', `/api/roommate/requests/${encodeURIComponent(id)}/respond`, { status });
+    await fetchRoommateRequests();
+    await findMatches();
+  } catch (e) {
+    alert('처리 실패: ' + e.message);
+  }
+}
+
+async function cancelPendingRoommateRequest(id) {
+  if (!confirm('대기 중인 룸메 신청을 취소할까요?')) return;
+  try {
+    await api('POST', `/api/roommate/requests/${encodeURIComponent(id)}/cancel-pending`, { sid: currentRoomSid });
+    await fetchRoommateRequests();
+  } catch (e) {
+    alert('취소 실패: ' + e.message);
+  }
+}
+
+async function requestCancelRoommate(id) {
+  if (!confirm('상대방에게 룸메 예정 취소 요청을 보낼까요? 상대가 동의해야 최종 취소됩니다.')) return;
+  try {
+    await api('POST', `/api/roommate/requests/${encodeURIComponent(id)}/cancel-request`, { sid: currentRoomSid });
+    await fetchRoommateRequests();
+    await findMatches();
+  } catch (e) {
+    alert('취소 요청 실패: ' + e.message);
+  }
+}
+
+async function respondCancelRoommate(id, action) {
+  const msg = action === 'agree' ? '취소에 동의하여 룸메 예정을 해제할까요?' : '취소 요청을 거절하고 룸메 예정 상태를 유지할까요?';
+  if (!confirm(msg)) return;
+  try {
+    await api('POST', `/api/roommate/requests/${encodeURIComponent(id)}/cancel-respond`, { sid: currentRoomSid, action });
+    await fetchRoommateRequests();
+    await findMatches();
+  } catch (e) {
+    alert('처리 실패: ' + e.message);
+  }
+}
+
+let hashTimer = null;
+async function calcHash() {
+  const val = document.getElementById('calc-id').value.trim();
+  const out = document.getElementById('calc-result');
+  if (!val) { out.textContent = '// 학번을 입력하세요'; return; }
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(async () => {
+    try {
+      const data = await api('GET', `/hash/${val}`);
+      let steps = '';
+      data.steps.forEach(s => {
+        steps += `  [${s.index}] '${s.char}' (${s.code}) → h = ${s.h}\n`;
+      });
+      out.innerHTML = `<strong>h("${val}")</strong><br><br>${steps}<br><strong>→ 슬롯 [${data.slot}] · ${data.partition}</strong>`;
+    } catch (e) {
+      out.textContent = `// 오류: ${e.message}`;
+    }
+  }, 300);
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'table') loadTableTab();
+  if (name === 'redis') loadCacheTab();
+}
+
+(async () => {
+  await checkServer();
+  await initChecklist();
+})();
+</script>
+</body>
+</html>

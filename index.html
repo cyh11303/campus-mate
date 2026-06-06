@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>캠퍼스 메이트</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5B6EF5;
+            --primary-light: #EEF0FE;
+            --secondary: #FF6B9D;
+            --green: #22C55E;
+            --green-light: #DCFCE7;
+            --bg: #F5F6FA;
+            --card: #FFFFFF;
+            --text: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── 네비바 ── */
+        .navbar {
+            width: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.25rem;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .nav-logo .logo-icon {
+            width: 28px; height: 28px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .live-dot {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 11px; font-weight: 600; color: var(--green);
+            background: var(--green-light);
+            padding: 4px 10px; border-radius: 20px;
+        }
+
+        .live-dot::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ── 본문 ── */
+        .wrap {
+            width: 100%;
+            max-width: 460px;
+            padding: 1.5rem 1.25rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ── 시계 카드 ── */
+        .clock-card {
+            background: linear-gradient(135deg, #5B6EF5 0%, #9B59F5 50%, #FF6B9D 100%);
+            border-radius: 24px;
+            padding: 1.5rem 1.75rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clock-card .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+        }
+        .clock-card .b1 { width:150px;height:150px; top:-50px; right:-40px; }
+        .clock-card .b2 { width:80px;height:80px; bottom:-20px; right:80px; }
+        .clock-card .b3 { width:50px;height:50px; bottom:20px; left:20px; background:rgba(255,255,255,0.04); }
+
+        .clock-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .clock-greeting {
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .clock-date {
+            font-size: 0.8rem;
+            opacity: 0.75;
+            font-weight: 500;
+        }
+
+        .clock-time {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .clock-sub {
+            font-size: 0.78rem;
+            opacity: 0.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── 공지 ── */
+        .notice {
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-radius: 14px;
+            padding: 0.7rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #92400E;
+            font-weight: 500;
+        }
+
+        /* ── 섹션 헤더 ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ── 메뉴 카드 ── */
+        .menu-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+            border: 1.5px solid transparent;
+            transition: all 0.18s ease;
+            position: relative;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .menu-card:active { transform: scale(0.98); }
+
+        .menu-card.meal:hover { border-color: var(--green); }
+        .menu-card.room:hover { border-color: var(--primary); }
+
+        .menu-arrow {
+            position: absolute; right: 1.25rem;
+            color: var(--border);
+            font-size: 1.2rem;
+            transition: all 0.18s ease;
+        }
+        .menu-card:hover .menu-arrow { color: var(--text-sub); transform: translateX(3px); }
+
+        .menu-icon {
+            width: 54px; height: 54px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+        .meal .menu-icon { background: linear-gradient(135deg,#D1FAE5,#A7F3D0); }
+        .room .menu-icon { background: linear-gradient(135deg,#EEF0FE,#C7D2FE); }
+
+        .menu-info { flex: 1; }
+
+        .menu-title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+            letter-spacing: -0.3px;
+        }
+
+        .menu-desc {
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .menu-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .meal .menu-chip { background: var(--green-light); color: #15803D; }
+        .room .menu-chip { background: var(--primary-light); color: #3730A3; }
+
+        /* ── 통계 ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 1.1rem 1.25rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .stat-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .stat-card:nth-child(1) .stat-icon { background: var(--green-light); }
+        .stat-card:nth-child(2) .stat-icon { background: var(--primary-light); }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .stat-card:nth-child(1) .stat-value { color: var(--green); }
+        .stat-card:nth-child(2) .stat-value { color: var(--primary); }
+
+        .stat-unit { font-size: 0.75rem; font-weight: 500; color: var(--text-sub); }
+
+        /* ── 피처 카드 ── */
+        .feature-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-icon-wrap {
+            width: 38px; height: 38px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .feature-head-text {}
+        .feature-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 1px;
+        }
+        .feature-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+        }
+
+        .feature-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .fi-dot {
+            width: 22px; height: 22px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .fi-content {}
+        .fi-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .fi-desc {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            line-height: 1.45;
+        }
+
+        .fi-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .fi-tag {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+        }
+
+        /* ── 푸터 ── */
+        .footer {
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            text-align: center;
+            padding-top: 0.5rem;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">
+            <div class="logo-icon">🎓</div>
+            캠퍼스메이트
+        </div>
+        <div class="nav-right">
+            <span class="live-dot">LIVE</span>
+        </div>
+    </nav>
+
+    <div class="wrap">
+
+        <!-- 시계 -->
+        <div class="clock-card">
+            <div class="bubble b1"></div>
+            <div class="bubble b2"></div>
+            <div class="bubble b3"></div>
+            <div class="clock-top">
+                <span class="clock-greeting" id="greeting">안녕하세요 👋</span>
+                <span class="clock-date" id="date-str"></span>
+            </div>
+            <div class="clock-time" id="clock">00:00:00</div>
+            <div class="clock-sub">성균관대학교 · 자료구조 프로젝트 2026</div>
+        </div>
+
+        <!-- 공지 -->
+        <div class="notice">
+            📢 해시 테이블 &amp; 2차원 배열 기반 스마트 캠퍼스 시스템
+        </div>
+
+        <!-- 서비스 메뉴 -->
+        <div class="section-header">
+            <span class="section-label">서비스</span>
+        </div>
+
+        <a href="meal.html" class="menu-card meal">
+            <div class="menu-icon">🍚</div>
+            <div class="menu-info">
+                <div class="menu-title">밥약 신청하기</div>
+                <div class="menu-desc">공강 시간, 같이 밥 먹을 학우를 찾아요</div>
+                <span class="menu-chip">📐 2D Array 스케줄링</span>
+            </div>
+            <span class="menu-arrow">›</span>
+        </a>
+
+        <a href="roommate.html" class="menu-card room">
+            <div class="menu-icon">🏠</div>
+            <div class="menu-info">
+                <div class="menu-title">룸메이트 찾기</div>
+                <div class="menu-desc">생활 패턴이 딱 맞는 룸메이트를 매칭해요</div>
+                <span class="menu-chip">🔑 Hash Table 매칭</span>
+            </div>
+            <span class="menu-arrow">›</span>
+        </a>
+
+
+        <!-- 실시간 현황 -->
+        <div class="section-header">
+            <span class="section-label">실시간 현황</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🍽️</div>
+                <div>
+                    <div class="stat-label">밥약 신청자</div>
+                    <div class="stat-value" id="meal-count">-<span class="stat-unit">명</span></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏠</div>
+                <div>
+                    <div class="stat-label">룸메이트 등록</div>
+                    <div class="stat-value" id="room-count">-<span class="stat-unit">명</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">© 2026 Campus Mate · SKKU 자료구조 팀 프로젝트</div>
+
+    </div>
+
+    <script>
+        const DAYS = ['일','월','화','수','목','금','토'];
+        function pad(n) { return String(n).padStart(2,'0'); }
+
+        function tick() {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            document.getElementById('date-str').textContent =
+                `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} (${DAYS[now.getDay()]})`;
+            const h = now.getHours();
+            document.getElementById('greeting').textContent =
+                h>=5&&h<12 ? '좋은 아침이에요 ☀️' :
+                h>=12&&h<14 ? '점심 시간이에요 🍽️' :
+                h>=14&&h<18 ? '오후도 화이팅! 💪' :
+                h>=18&&h<22 ? '저녁 시간이에요 🌆' : '늦은 밤이네요 🌙';
+        }
+
+        async function fetchStats() {
+            try {
+                const [a, b] = await Promise.all([fetch('/api/list'), fetch('/table')]);
+                const meal = await a.json();
+                const room = await b.json();
+                document.getElementById('meal-count').innerHTML = `${meal.length}<span class="stat-unit">명</span>`;
+                const roomCount = room.total_users ?? room.totalUsers ?? room.total ?? room.count ?? room.users?.length ?? 0;
+                document.getElementById('room-count').innerHTML = `${roomCount}<span class="stat-unit">명</span>`;
+            } catch {
+                document.getElementById('meal-count').innerHTML = `?<span class="stat-unit">명</span>`;
+                document.getElementById('room-count').innerHTML = `?<span class="stat-unit">명</span>`;
+            }
+        }
+
+        tick();
+        setInterval(tick, 1000);
+        fetchStats();
+        setInterval(fetchStats, 10000);
+    </script>
+</body>
+</html>

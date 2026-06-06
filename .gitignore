@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+campus_mate.db
+*.db
+.env
+uploads/*
+!uploads/.gitkeep

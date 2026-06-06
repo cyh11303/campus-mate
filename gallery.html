@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>오늘의 메뉴 갤러리 · 캠퍼스 메이트</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5B6EF5;
+            --green: #22C55E;
+            --green-light: #DCFCE7;
+            --green-dark: #15803D;
+            --amber: #F59E0B;
+            --amber-light: #FEF3C7;
+            --red: #EF4444;
+            --red-light: #FEE2E2;
+            --bg: #F5F6FA;
+            --card: #FFFFFF;
+            --text: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── 네비바 ── */
+        .navbar {
+            width: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.25rem;
+            height: 54px;
+            display: flex; align-items: center; gap: 10px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-btn {
+            width: 32px; height: 32px; border-radius: 10px;
+            background: var(--bg); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; color: var(--text-sub); font-size: 1.1rem;
+            transition: all 0.15s; flex-shrink: 0;
+        }
+        .back-btn:hover { background: var(--border); }
+        .nav-title { font-size: 1rem; font-weight: 800; }
+        .nav-chip {
+            margin-left: auto; font-size: 10px; font-weight: 700;
+            background: var(--amber-light); color: #92400E;
+            padding: 3px 9px; border-radius: 20px;
+        }
+
+        /* ── 본문 레이아웃 ── */
+        .wrap {
+            max-width: 860px; margin: 0 auto;
+            padding: 1.25rem 1.25rem 4rem;
+        }
+
+        /* ── 히어로 ── */
+        .hero-banner {
+            background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+            border-radius: 22px; padding: 1.5rem;
+            color: white; position: relative; overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+        .hero-banner .b1 { position:absolute; width:130px; height:130px; background:rgba(255,255,255,0.08); border-radius:50%; top:-40px; right:-20px; }
+        .hero-banner .b2 { position:absolute; width:70px; height:70px; background:rgba(255,255,255,0.05); border-radius:50%; bottom:-15px; right:70px; }
+        .hero-icon { font-size: 2rem; margin-bottom: 0.5rem; position:relative; z-index:1; }
+        .hero-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; position:relative; z-index:1; letter-spacing: -0.5px; }
+        .hero-desc { font-size: 0.82rem; opacity: 0.88; position:relative; z-index:1; }
+
+        /* ── 업로드 카드 ── */
+        .upload-card {
+            background: var(--card); border-radius: 20px;
+            padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.25rem;
+        }
+        .upload-card-title {
+            font-size: 0.8rem; font-weight: 700; color: var(--text-sub);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* 이미지 드롭존 */
+        .drop-zone {
+            border: 2px dashed var(--border); border-radius: 14px;
+            padding: 2rem 1rem; text-align: center; cursor: pointer;
+            transition: all 0.2s; margin-bottom: 0.85rem; position: relative;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--amber); background: var(--amber-light);
+        }
+        .drop-zone input[type=file] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .drop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .drop-text { font-size: 0.85rem; font-weight: 600; color: var(--text-sub); }
+        .drop-sub  { font-size: 0.72rem; color: #C4C9D4; margin-top: 3px; }
+
+        #preview-wrap { display: none; margin-bottom: 0.85rem; position: relative; }
+        #preview-img  {
+            width: 100%; max-height: 240px; object-fit: cover;
+            border-radius: 12px; display: block;
+        }
+        .preview-remove {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.5); color: white;
+            border: none; border-radius: 8px;
+            width: 28px; height: 28px; cursor: pointer; font-size: 0.9rem;
+        }
+
+        /* 폼 필드 */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-label { font-size: 0.72rem; font-weight: 700; color: var(--text-sub); letter-spacing: 0.04em; }
+        .input-field {
+            padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 11px;
+            font-size: 0.88rem; font-family: 'Pretendard', sans-serif; color: var(--text);
+            background: var(--bg); outline: none; transition: border-color 0.15s;
+        }
+        .input-field::placeholder { color: #C4C9D4; }
+        .input-field:focus { border-color: var(--amber); background: white; box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+
+        /* 태그 입력 */
+        .tag-hint { font-size: 0.7rem; color: var(--text-sub); margin-top: 3px; }
+
+        /* 토스트 */
+        .toast {
+            display: none; align-items: center; gap: 8px;
+            padding: 10px 14px; border-radius: 12px;
+            font-size: 0.82rem; font-weight: 600; margin-bottom: 0.75rem;
+        }
+        .toast.ok  { display:flex; background:#F0FDF4; border:1px solid #BBF7D0; color:#15803D; }
+        .toast.err { display:flex; background:var(--red-light); border:1px solid #FECACA; color:var(--red); }
+
+        /* 제출 버튼 */
+        .submit-btn {
+            width: 100%; padding: 13px; background: var(--amber); color: white;
+            border: none; border-radius: 13px; font-size: 0.95rem; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.15s; font-family: 'Pretendard', sans-serif;
+        }
+        .submit-btn:hover { background: #D97706; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
+        .submit-btn:disabled { background: var(--border); color: var(--text-sub); cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ── 필터/정렬 바 ── */
+        .bar {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem;
+        }
+        .section-label { font-size: 0.7rem; font-weight: 700; color: var(--text-sub); letter-spacing: 0.1em; text-transform: uppercase; }
+        .tag-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag-filter-btn {
+            font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+            border: 1px solid var(--border); background: var(--card); color: var(--text-sub);
+            cursor: pointer; transition: all 0.12s; font-family: 'Pretendard', sans-serif;
+        }
+        .tag-filter-btn.active { background: var(--amber); border-color: var(--amber); color: white; }
+        .count-badge { font-size: 11px; font-weight: 700; background: var(--amber-light); color: #92400E; padding: 3px 9px; border-radius: 20px; }
+
+        /* ── 갤러리 그리드 ── */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        /* 게시글 카드 */
+        .post-card {
+            background: var(--card); border-radius: 18px;
+            overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: all 0.18s ease;
+        }
+        .post-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+
+        .post-img {
+            width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
+            background: var(--bg);
+        }
+
+        .post-body { padding: 0.9rem 1rem; }
+
+        .post-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.5rem; }
+        .post-tag {
+            font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px;
+            background: var(--amber-light); color: #92400E;
+        }
+
+        .post-menu { font-size: 0.92rem; font-weight: 800; margin-bottom: 2px; letter-spacing: -0.3px; }
+        .post-author { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 0.6rem; }
+        .post-time { font-size: 0.68rem; color: #C4C9D4; margin-bottom: 0.65rem; }
+
+        .post-reactions { display: flex; gap: 6px; align-items: center; }
+        .react-btn {
+            display: flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 20px;
+            border: 1px solid var(--border); background: var(--bg);
+            font-size: 12px; font-weight: 600; color: var(--text-sub);
+            cursor: pointer; transition: all 0.12s; font-family: 'Pretendard', sans-serif;
+        }
+        .react-btn:hover { border-color: var(--amber); background: var(--amber-light); color: #92400E; }
+        .react-btn.reacted { background: var(--amber-light); border-color: var(--amber); color: #92400E; }
+
+        .del-post-btn {
+            margin-left: auto; background: none; border: none;
+            color: #D1D5DB; font-size: 0.85rem; cursor: pointer;
+            padding: 4px 6px; border-radius: 6px; transition: all 0.12s;
+        }
+        .del-post-btn:hover { background: var(--red-light); color: var(--red); }
+
+        /* 빈 상태 */
+        .empty-state {
+            grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;
+            color: var(--text-sub); font-size: 0.85rem;
+        }
+        .empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+        @media (max-width: 500px) {
+            .form-row { grid-template-columns: 1fr; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="back-btn">‹</a>
+        <span class="nav-title">오늘의 메뉴 갤러리</span>
+        <span class="nav-chip">📸 인증 게시판</span>
+    </nav>
+
+    <div class="wrap">
+
+        <!-- 히어로 -->
+        <div class="hero-banner">
+            <div class="b1"></div><div class="b2"></div>
+            <div class="hero-icon">🖼️</div>
+            <div class="hero-title">밥약 인증 게시판</div>
+            <div class="hero-desc">함께 먹은 음식 사진을 올리고 '솔로 탈출' 배지를 받아보세요!</div>
+        </div>
+
+        <!-- 업로드 폼 -->
+        <div class="upload-card">
+            <div class="upload-card-title">📤 새 게시글 올리기</div>
+
+            <div id="toast" class="toast"></div>
+
+            <!-- 이미지 드롭존 -->
+            <div class="drop-zone" id="drop-zone">
+                <input type="file" id="image-input" accept="image/*" onchange="previewImage(this)">
+                <div class="drop-icon">📷</div>
+                <div class="drop-text">사진을 클릭하거나 드래그해서 올려주세요</div>
+                <div class="drop-sub">JPG · PNG · GIF · WEBP · 최대 10MB</div>
+            </div>
+
+            <div id="preview-wrap">
+                <img id="preview-img" src="" alt="미리보기">
+                <button class="preview-remove" onclick="removePreview()">✕</button>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label class="input-label">👤 이름</label>
+                    <input class="input-field" type="text" id="g-name" placeholder="이름 입력">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">🍽️ 메뉴</label>
+                    <input class="input-field" type="text" id="g-menu" placeholder="예: 돈까스, 국밥">
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom:0.85rem">
+                <label class="input-label">🏷️ 해시태그</label>
+                <input class="input-field" type="text" id="g-tags" placeholder="쉼표로 구분 예: 쪽문맛집, 학식, 혼밥탈출">
+                <div class="tag-hint">태그를 달면 다른 학우들이 쉽게 찾을 수 있어요</div>
+            </div>
+
+            <button class="submit-btn" id="submit-btn" onclick="uploadPost()">
+                📸&nbsp; 게시글 올리기
+            </button>
+        </div>
+
+        <!-- 갤러리 목록 -->
+        <div class="bar">
+            <span class="section-label">전체 게시글 <span class="count-badge" id="post-count">0개</span></span>
+            <div class="tag-filters" id="tag-filters">
+                <button class="tag-filter-btn active" data-tag="전체" onclick="filterTag('전체', this)">전체</button>
+            </div>
+        </div>
+
+        <div class="gallery-grid" id="gallery-grid">
+            <div class="empty-state">
+                <span class="empty-icon">🍽️</span>
+                아직 게시글이 없어요.<br>첫 번째로 인증샷을 올려보세요!
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API = window.location.origin;
+        let allPosts = [];
+        let activeTag = '전체';
+
+        // ── 이미지 미리보기 ──────────────────────────────────────────────────
+        function previewImage(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const url  = URL.createObjectURL(file);
+            document.getElementById('preview-img').src = url;
+            document.getElementById('preview-wrap').style.display = 'block';
+            document.getElementById('drop-zone').style.display    = 'none';
+        }
+
+        function removePreview() {
+            document.getElementById('preview-wrap').style.display = 'none';
+            document.getElementById('drop-zone').style.display    = 'block';
+            document.getElementById('image-input').value = '';
+        }
+
+        // 드래그 앤 드롭
+        const dz = document.getElementById('drop-zone');
+        dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault(); dz.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                document.getElementById('image-input').files = e.dataTransfer.files;
+                previewImage(document.getElementById('image-input'));
+            }
+        });
+
+        // ── 토스트 ──────────────────────────────────────────────────────────
+        function showToast(msg, ok) {
+            const el = document.getElementById('toast');
+            el.textContent = (ok ? '✓  ' : '✗  ') + msg;
+            el.className = 'toast ' + (ok ? 'ok' : 'err');
+            setTimeout(() => { el.className = 'toast'; }, 3000);
+        }
+
+        // ── 게시글 업로드 ────────────────────────────────────────────────────
+        async function uploadPost() {
+            const name  = document.getElementById('g-name').value.trim();
+            const menu  = document.getElementById('g-menu').value.trim();
+            const tags  = document.getElementById('g-tags').value.trim();
+            const file  = document.getElementById('image-input').files[0];
+
+            if (!file)  return showToast('사진을 선택해주세요', false);
+            if (!name)  return showToast('이름을 입력해주세요', false);
+            if (!menu)  return showToast('메뉴를 입력해주세요', false);
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = '업로드 중...';
+
+            const form = new FormData();
+            form.append('name',  name);
+            form.append('menu',  menu);
+            form.append('tags',  tags);
+            form.append('image', file);
+
+            try {
+                const res  = await fetch(`${API}/api/gallery`, { method: 'POST', body: form });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('게시글이 올라갔어요! 🎉', true);
+                    removePreview();
+                    document.getElementById('g-name').value = '';
+                    document.getElementById('g-menu').value = '';
+                    document.getElementById('g-tags').value = '';
+                    fetchGallery();
+                } else {
+                    showToast(data.detail || '업로드 실패', false);
+                }
+            } catch {
+                showToast('서버 연결 실패', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📸&nbsp; 게시글 올리기';
+            }
+        }
+
+        // ── 갤러리 불러오기 ──────────────────────────────────────────────────
+        async function fetchGallery() {
+            try {
+                const res  = await fetch(`${API}/api/gallery`);
+                allPosts   = await res.json();
+                buildTagFilters();
+                renderGallery();
+            } catch {
+                document.getElementById('gallery-grid').innerHTML =
+                    `<div class="empty-state"><span class="empty-icon">⚠️</span>서버 연결 실패</div>`;
+            }
+        }
+
+        function buildTagFilters() {
+            const tagSet = new Set();
+            allPosts.forEach(p => p.tags.forEach(t => tagSet.add(t)));
+
+            const container = document.getElementById('tag-filters');
+            const existing  = [...container.querySelectorAll('[data-tag]')].map(b => b.dataset.tag);
+            tagSet.forEach(tag => {
+                if (!existing.includes(tag)) {
+                    const btn = document.createElement('button');
+                    btn.className       = 'tag-filter-btn';
+                    btn.dataset.tag     = tag;
+                    btn.textContent     = '#' + tag;
+                    btn.onclick         = () => filterTag(tag, btn);
+                    container.appendChild(btn);
+                }
+            });
+        }
+
+        function filterTag(tag, btn) {
+            activeTag = tag;
+            document.querySelectorAll('.tag-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const filtered = activeTag === '전체'
+                ? allPosts
+                : allPosts.filter(p => p.tags.includes(activeTag));
+
+            document.getElementById('post-count').textContent = `${filtered.length}개`;
+            const grid = document.getElementById('gallery-grid');
+
+            if (!filtered.length) {
+                grid.innerHTML = `<div class="empty-state">
+                    <span class="empty-icon">🍽️</span>
+                    아직 게시글이 없어요.<br>첫 번째로 인증샷을 올려보세요!
+                </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="post-card" id="card-${p.id}">
+                    <img class="post-img" src="${p.image_url}" alt="${p.menu}" loading="lazy"
+                         onerror="this.style.height='120px';this.style.background='#F3F4F6'">
+                    <div class="post-body">
+                        ${p.tags.length ? `<div class="post-tags">${p.tags.map(t=>`<span class="post-tag">#${t}</span>`).join('')}</div>` : ''}
+                        <div class="post-menu">${p.menu}</div>
+                        <div class="post-author">by ${p.name}</div>
+                        <div class="post-time">${p.created_at}</div>
+                        <div class="post-reactions">
+                            <button class="react-btn" onclick="react('${p.id}','yummy',this)">
+                                😋 맛있어 보여요 <span>${p.reactions.yummy}</span>
+                            </button>
+                            <button class="react-btn" onclick="react('${p.id}','where',this)">
+                                📍 여기 어디? <span>${p.reactions.where}</span>
+                            </button>
+                            <button class="del-post-btn" onclick="deletePost('${p.id}')" title="삭제">✕</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // ── 리액션 ──────────────────────────────────────────────────────────
+        async function react(postId, reaction, btn) {
+            try {
+                const res  = await fetch(`${API}/api/gallery/${postId}/react?reaction=${reaction}`, { method: 'POST' });
+                const data = await res.json();
+                btn.classList.toggle('reacted');
+                const key = reaction === 'yummy' ? 'yummy' : 'where';
+                btn.querySelector('span').textContent = data.reactions[key];
+            } catch { /* silent */ }
+        }
+
+        // ── 삭제 ────────────────────────────────────────────────────────────
+        async function deletePost(postId) {
+            if (!confirm('이 게시글을 삭제할까요?')) return;
+            try {
+                await fetch(`${API}/api/gallery/${postId}`, { method: 'DELETE' });
+                fetchGallery();
+            } catch {
+                showToast('삭제 실패', false);
+            }
+        }
+
+        // ── 초기 로드 ────────────────────────────────────────────────────────
+        fetchGallery();
+    </script>
+</body>
+</html>
