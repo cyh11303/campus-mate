@@ -641,6 +641,30 @@ def get_meal_requests(student_id: str):
         "sent": [pack(r, "sent") for r in sent_rows],
     }
 
+@app.post("/api/meal/requests/{request_id}/respond")
+def respond_meal_request(request_id: str, body: MealRequestRespond):
+    status = body.status.strip().lower()
+    if status not in {"accepted", "rejected"}:
+        raise HTTPException(status_code=400, detail="status는 accepted 또는 rejected만 가능합니다.")
+
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM meal_requests WHERE id = ?", (request_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="밥약 요청을 찾을 수 없습니다.")
+        if row["status"] != "pending":
+            raise HTTPException(status_code=409, detail="대기 중인 요청만 수락 또는 거절할 수 있습니다.")
+
+        conn.execute(
+            "UPDATE meal_requests SET status = ? WHERE id = ?",
+            (status, request_id),
+        )
+        conn.commit()
+
+    return {
+        "message": "요청을 수락했습니다." if status == "accepted" else "요청을 거절했습니다.",
+        "status": status,
+    }
+
 
 @app.post("/api/roommate/requests/{request_id}/respond")
 def respond_roommate_request(request_id: str, body: RoommateRequestRespond):
