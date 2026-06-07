@@ -576,8 +576,6 @@
             finally { btn.disabled = false; }
         }
 
-        const FOOD_EMOJIS = ['🍜','🍣','🍔','🌮','🍱','🥘','🍛','🥗','🍝','🍲'];
-
         async function fetchList() {
             const container = document.getElementById('applicant-list');
             try {
@@ -596,7 +594,6 @@
                     const plannedBadge = plannedCount > 0 ? `<span class="planned-badge">밥약 예정 ${plannedCount}명</span>` : '';
                     return `
                     <div class="applicant-item">
-                        <div class="applicant-avatar">${FOOD_EMOJIS[i % FOOD_EMOJIS.length]}</div>
                         <div class="applicant-info">
                             <div class="applicant-name">${escapeHtml(item.name)}</div>
                             <div class="applicant-meta">${maskStudentId(item.studentId)}</div>
