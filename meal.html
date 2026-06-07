@@ -502,7 +502,11 @@
             div.textContent = String(v ?? '');
             return div.innerHTML;
         }
-
+        function maskStudentId(studentId) {
+            const sid = String(studentId ?? '');
+            if (sid.length < 4) return sid;
+            return sid.slice(0, 4) + '****' + sid.slice(-2);
+        }
         function updateContactPlaceholder() {
             const type = document.getElementById('contact-type').value;
             const detail = document.getElementById('contact-detail');
