@@ -560,8 +560,12 @@ def get_meal_requests(student_id: str):
     with get_conn() as conn:
         received_rows = conn.execute(
             """
-            SELECT r.*, m.name AS target_name, m.menu AS target_menu, m.contact AS target_contact,
-                   m.contact_type AS target_contact_type, m.contact_detail AS target_contact_detail
+            SELECT r.*,
+                   m.name AS target_name,
+                   m.menu AS target_menu,
+                   m.contact AS target_contact,
+                   m.contact_type AS target_contact_type,
+                   m.contact_detail AS target_contact_detail
             FROM meal_requests r
             JOIN meals m ON r.target_student_id = m.studentId
             WHERE r.target_student_id = ?
@@ -569,10 +573,15 @@ def get_meal_requests(student_id: str):
             """,
             (student_id,),
         ).fetchall()
+
         sent_rows = conn.execute(
             """
-            SELECT r.*, m.name AS target_name, m.menu AS target_menu, m.contact AS target_contact,
-                   m.contact_type AS target_contact_type, m.contact_detail AS target_contact_detail
+            SELECT r.*,
+                   m.name AS target_name,
+                   m.menu AS target_menu,
+                   m.contact AS target_contact,
+                   m.contact_type AS target_contact_type,
+                   m.contact_detail AS target_contact_detail
             FROM meal_requests r
             JOIN meals m ON r.target_student_id = m.studentId
             WHERE r.requester_student_id = ?
@@ -581,41 +590,57 @@ def get_meal_requests(student_id: str):
             (student_id,),
         ).fetchall()
 
-    def pack(row, mode):
-        item = {
-            "id": row["id"],
-            "targetSid": row["target_sid"],
-            "targetName": row["target_name"],
-            "targetDept": row["target_dept"],
-            "requesterSid": row["requester_sid"],
-            "requesterName": row["requester_name"] or row["requester_real_name"],
-            "requesterDept": row["requester_dept"],
-            "message": row["message"],
-            "status": row["status"],
-            "cancelRequestedBy": row["cancel_requested_by"] if "cancel_requested_by" in row.keys() else "",
-            "created_at": row["created_at"],
-        }
-        if mode == "sent":
-            item["counterpartName"] = row["target_name"]
-            item["counterpartDept"] = row["target_dept"]
-            item["counterpartContactType"] = row["target_contact_type"] or "기타"
-            item["counterpartContactDetail"] = row["target_contact_detail"] or ""
-        else:
-            item["counterpartName"] = row["requester_name"] or row["requester_real_name"]
-            item["counterpartDept"] = row["requester_dept"]
-            item["counterpartContactType"] = row["requester_contact_type"] or "기타"
-            item["counterpartContactDetail"] = row["requester_contact_detail"] or ""
+    def row_get(row, key, default=""):
+        return row[key] if key in row.keys() and row[key] is not None else default
 
-        if row["status"] in {"accepted", "cancel_requested"}:
+    def pack(row, mode):
+        status = row_get(row, "status", "pending")
+        target_contact_type = row_get(row, "target_contact_type", "기타") or "기타"
+        target_contact_detail = row_get(row, "target_contact_detail", "") or row_get(row, "target_contact", "")
+
+        item = {
+            "id": row_get(row, "id"),
+            "targetSid": row_get(row, "target_student_id"),
+            "targetName": row_get(row, "target_name"),
+            "targetMenu": row_get(row, "target_menu"),
+            "targetDept": "",
+            "requesterSid": row_get(row, "requester_student_id"),
+            "requesterName": row_get(row, "requester_name"),
+            "requesterDept": "",
+            "message": row_get(row, "message"),
+            "status": status,
+            "created_at": row_get(row, "created_at"),
+        }
+
+        if mode == "sent":
+            item["counterpartName"] = item["targetName"]
+            item["counterpartDept"] = item["targetDept"]
+            item["counterpartContactType"] = target_contact_type
+            item["counterpartContactDetail"] = target_contact_detail
+        else:
+            item["counterpartName"] = item["requesterName"]
+            item["counterpartDept"] = item["requesterDept"]
+            # 밥약 요청자는 별도 연락수단을 받지 않으므로 받은 요청에서는 연락처를 비워둔다.
+            item["counterpartContactType"] = ""
+            item["counterpartContactDetail"] = ""
+
+        # 수락된 보낸 요청에서만 상대 연락수단을 보여준다.
+        if mode == "sent" and status == "accepted":
             item["contactType"] = item["counterpartContactType"]
             item["contactDetail"] = item["counterpartContactDetail"]
-            item["contact"] = (f"{item['contactType']}: {item['contactDetail']}" if item["contactDetail"] else "")
+            item["contact"] = (
+                f"{item['contactType']}: {item['contactDetail']}"
+                if item["contactDetail"]
+                else ""
+            )
+
         return item
 
     return {
         "received": [pack(r, "received") for r in received_rows],
         "sent": [pack(r, "sent") for r in sent_rows],
     }
+
 
 @app.post("/api/roommate/requests/{request_id}/respond")
 def respond_roommate_request(request_id: str, body: RoommateRequestRespond):
