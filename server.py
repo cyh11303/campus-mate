@@ -1,6 +1,6 @@
 """
 캠퍼스 메이트 백엔드 서버
-- 해시 테이블 (SIZE=30, Separate Chaining)
+- 해시 테이블 (SIZE=31, Separate Chaining)
 - Weighted Jaccard 매칭
 - SQLite 데이터베이스 연동으로 데이터 영속성 추가
 - In-memory TTL 캐시
@@ -203,16 +203,17 @@ def row_to_post(row: sqlite3.Row) -> dict:
     }
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 해시 테이블 (Separate Chaining, SIZE=30)
+# 해시 테이블 (Separate Chaining, SIZE=31)
 # ══════════════════════════════════════════════════════════════════════════════
 
-TABLE_SIZE = 30
+TABLE_SIZE = 31
+HASH_MULTIPLIER = 37
 
 def hash_func(sid: str) -> int:
-    """다항 롤링 해시: h = Σ(charCode[i] × 31^i) % TABLE_SIZE"""
+    """31 슬롯용 누적 해시: h = (h × 37 + charCode[i]) % TABLE_SIZE"""
     h = 0
     for ch in sid:
-        h = (h * 31 + ord(ch)) % TABLE_SIZE
+        h = (h * HASH_MULTIPLIER + ord(ch)) % TABLE_SIZE
     return h
 
 def get_partition(slot: int) -> str:
@@ -1258,7 +1259,7 @@ def get_hash(sid: str):
     h = 0
     steps = []
     for i, ch in enumerate(sid):
-        h = (h * 31 + ord(ch)) % TABLE_SIZE
+        h = (h * HASH_MULTIPLIER + ord(ch)) % TABLE_SIZE
         steps.append({"index": i, "char": ch, "code": ord(ch), "h": h})
     slot = h
     return {"sid": sid, "slot": slot, "partition": get_partition(slot), "steps": steps}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>룸메이트 매칭 시스템</title>
+<title>룸메이트 찾기 - 앱형</title>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
 :root {
@@ -20,6 +20,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .site-header{padding:2.5rem 0 2rem;border-bottom:.5px solid var(--border);margin-bottom:2rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
 .site-header h1{font-size:26px;font-weight:800;letter-spacing:-.5px;}
 .site-header h1 span{color:var(--accent);}
+.home-brand{display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;color:rgba(255,255,255,.92);text-decoration:none;font-size:13px;font-weight:900;position:relative;z-index:2;letter-spacing:-.2px;}
+.home-brand:hover{text-decoration:underline;}
 .subtitle{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:4px;}
 .badge-row{display:flex;gap:6px;flex-wrap:wrap;}
 .hbadge{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:5px;white-space:nowrap;}
@@ -220,22 +222,336 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .modal-actions .btn{margin-top:0;}
 @media(max-width:620px){.request-box-grid{grid-template-columns:1fr;}.modal-actions{flex-direction:column;}.active-roommate-main{align-items:flex-start;}.active-roommate-meta{grid-template-columns:1fr;}.active-roommate-box{padding:1rem;}}
 
+
+
+/* ===== APP DESIGN OVERRIDE v15 ===== */
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --surface2:#f7f8fc;
+  --border:#e7ebf3; --border2:#dfe4ee;
+  --accent:#5865ff; --green:#22c879; --amber:#f0ad20; --red:#ff5f6d; --purple:#8f58f5;
+  --text:#182033; --text2:#657087; --text3:#98a2b4;
+  --mono:'Nanum Gothic',sans-serif; --sans:'Nanum Gothic',sans-serif;
+}
+body{background:var(--bg);color:var(--text);}
+.wrapper{max-width:760px;padding:0 18px 5rem;}
+.site-header{margin:26px auto 18px;padding:30px 32px;border:0;border-radius:28px;background:linear-gradient(135deg,#6671ff,#8f58f5,#ff5c9b);color:white;box-shadow:0 18px 40px rgba(93,91,255,.22);position:relative;overflow:hidden;align-items:center;}
+.site-header:before,.site-header:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.13);pointer-events:none;}
+.site-header:before{width:150px;height:150px;right:-34px;top:-45px;}
+.site-header:after{width:92px;height:92px;right:92px;bottom:-38px;}
+.site-header h1{font-size:30px;color:white;position:relative;z-index:1;letter-spacing:-1px;}
+.site-header h1 span{color:white;}
+.subtitle{font-family:var(--sans);font-size:14px;color:rgba(255,255,255,.9);font-weight:700;position:relative;z-index:1;text-transform:none;letter-spacing:0;}
+.server-status{color:rgba(255,255,255,.88);position:relative;z-index:1;}
+.badge-row{display:none;}
+.tabs{border:1px solid var(--border);background:#fff;border-radius:18px;box-shadow:0 8px 22px rgba(32,39,70,.06);margin-bottom:18px;}
+.tab-btn{padding:15px 6px;border-color:var(--border);color:var(--text2);font-size:13px;font-weight:800;}
+.tab-btn:hover{background:#f7f8ff;color:var(--accent);}
+.tab-btn.active{background:#eef2ff;color:var(--accent);}
+.card,.match-card,.req-item,.algo-box,details{background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:0 10px 28px rgba(32,39,70,.07);padding:24px;margin-bottom:18px;}
+.card-title{font-family:var(--sans);font-size:13px;letter-spacing:0;text-transform:none;color:#667087;font-weight:900;border-color:var(--border);}
+.form-grid,.primary-grid{gap:14px;}
+.form-group label{font-family:var(--sans);font-size:13px;color:#4c566e;font-weight:900;letter-spacing:0;}
+.form-group input,.form-group select,.modal input,.modal textarea{background:#f7f8fc;color:var(--text);border:1px solid var(--border2);border-radius:15px;padding:14px 15px;font-size:15px;}
+.form-group input::placeholder,.modal input::placeholder,.modal textarea::placeholder{color:#b6becc;}
+.form-group input:focus,.form-group select:focus,.modal input:focus,.modal textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(88,101,255,.12);background:white;}
+.form-group select option{background:white;color:var(--text);}
+.primary-note{font-family:var(--sans);font-size:12px;background:#fff4f5;border:1px solid #ffd3d8;color:var(--red);border-radius:14px;padding:12px 14px;line-height:1.65;}
+.checklist-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+.check-item{background:#f7f8fc;border:1px solid var(--border);border-radius:16px;color:var(--text2);padding:14px;font-size:14px;font-weight:800;}
+.check-item.selected{background:#eef2ff;border-color:rgba(88,101,255,.35);color:var(--accent);}
+.check-item .w-badge{background:#fff3d6;color:var(--amber);border:1px solid #ffe0a1;}
+.weight-row{background:#f7f8fc;border:1px solid var(--border);border-radius:16px;padding:13px 15px;}
+.btn{border-radius:16px;padding:15px 20px;font-size:15px;box-shadow:none;}
+.btn-primary{background:linear-gradient(135deg,#5865ff,#23c779);color:white;box-shadow:0 10px 24px rgba(45,196,128,.18);}
+.btn-primary:hover{background:linear-gradient(135deg,#4d59ef,#20ba70);}
+.btn-ghost{background:#eef1f8;border:1px solid var(--border);color:var(--text2);}
+.pipeline{background:#fff;border:1px solid var(--border);border-radius:20px;padding:14px;box-shadow:0 8px 22px rgba(32,39,70,.05);}
+.pipe-step{background:#f7f8fc;border:1px solid var(--border);border-radius:999px!important;color:var(--text2);font-family:var(--sans);font-weight:900;}
+.pipe-arrow{color:#b7bfce;}
+.match-search-row{align-items:end;}
+.match-section-label{font-family:var(--sans);font-size:13px;color:#667087;letter-spacing:0;text-transform:none;font-weight:900;margin:20px 4px 12px;}
+.cache-badge,.ms-badge{font-family:var(--sans);font-weight:900;border-radius:999px;}
+.match-card.high{border-color:#baf2d7;background:#fff;}
+.match-card.mid{border-color:#f1dca4;background:#fff;}
+.match-name{font-size:21px;color:var(--text);}
+.match-meta{font-family:var(--sans);font-size:13px;color:var(--text2);font-weight:800;}
+.match-score{font-family:var(--sans);font-size:28px;font-weight:900;}
+.match-score small{font-family:var(--sans);font-weight:900;color:var(--text3);}
+.bar-track{height:8px;background:#eef1f7;border-radius:999px;margin:16px 0 13px;}
+.bar-fill{border-radius:999px;}
+.tag{font-family:var(--sans);font-size:12px;font-weight:900;border-radius:999px;background:#f1f4fb;color:#667087;border:0;padding:7px 10px;}
+.tag.shared{background:#e9fff5;color:#17a86a;}
+.tag.weighted{background:#fff0f1;color:var(--red);}
+.request-btn{border-radius:14px;font-size:13px;background:#4f6df7;color:white;border:0;padding:12px 16px;}
+.active-roommate-box{background:linear-gradient(90deg,#eafff4,#f7fffb);border:1px solid #bff1d9;border-radius:24px;box-shadow:0 10px 26px rgba(32,186,116,.08);}
+.active-roommate-title{font-size:20px;font-weight:900;}
+.active-roommate-desc,.active-roommate-meta-item{font-size:13px;font-weight:800;color:var(--text2);}
+.active-roommate-icon{background:#24cf80;color:white;border:0;border-radius:24px;}
+.request-box-grid{gap:14px;}
+.request-col{background:#f7f8fc;border:1px solid var(--border);border-radius:18px;padding:16px;}
+.request-col-title{font-family:var(--sans);color:#536079;font-weight:900;}
+.req-status{font-family:var(--sans);border-radius:999px;font-weight:900;}
+.hash-slot{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 6px 18px rgba(32,39,70,.04);}
+.slot-header{font-family:var(--sans);color:var(--text2);}
+.stat-box{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 22px rgba(32,39,70,.05);}
+.stat-num{font-family:var(--sans);font-weight:900;color:var(--accent);}
+.modal-content{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:24px;box-shadow:0 24px 60px rgba(32,39,70,.2);}
+.modal-sub,.modal label,.contact-note,.empty-state,.loading{font-family:var(--sans);color:var(--text2);}
+@media(max-width:620px){.wrapper{padding:0 14px 4rem}.site-header{padding:26px 24px}.site-header h1{font-size:25px}.checklist-grid{grid-template-columns:1fr}.match-search-row{flex-direction:column;align-items:stretch}.match-search-row .btn{width:100%}.tabs{overflow-x:auto}.tab-btn{min-width:96px}.form-grid,.primary-grid{grid-template-columns:1fr}}
+
+
+/* ===== WEIGHT SLIDER MINT-BLUE UI v16 ===== */
+.weight-row{
+  display:grid;
+  grid-template-columns:64px minmax(120px, 1fr) minmax(220px, 1.6fr) 92px;
+  align-items:center;
+  gap:18px;
+  min-height:82px;
+  background:#fff;
+  border:1px solid #e8edf5;
+  border-radius:24px;
+  padding:16px 18px;
+  margin-bottom:14px;
+  box-shadow:0 10px 24px rgba(32,39,70,.06);
+}
+.weight-icon{
+  width:54px;
+  height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px;
+  background:linear-gradient(135deg,#e8fff7,#eef8ff);
+  font-size:25px;
+  box-shadow:inset 0 0 0 1px rgba(60,207,170,.08);
+}
+.weight-row .wlabel{
+  color:#15233d;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:-.2px;
+}
+.weight-row.critical .wlabel{color:#15233d;}
+.weight-slider{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  min-width:180px;
+  height:10px;
+  border-radius:999px;
+  outline:none;
+  background:linear-gradient(90deg,#63e0ad 0%,#43b7e8 var(--pct),#e9eef6 var(--pct),#e9eef6 100%);
+  box-shadow:inset 0 1px 2px rgba(18,33,58,.08);
+}
+.weight-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:radial-gradient(circle at center,#edf3fb 0 38%,#ffffff 40% 100%);
+  border:3px solid #ffffff;
+  box-shadow:0 5px 13px rgba(32,58,103,.22),0 0 0 2px #dbe4f3;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.weight-slider::-webkit-slider-thumb:hover{transform:scale(1.05);box-shadow:0 8px 18px rgba(32,58,103,.25),0 0 0 2px #cbd8ed;}
+.weight-slider::-moz-range-thumb{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:#fff;
+  border:3px solid #eef3fb;
+  box-shadow:0 5px 13px rgba(32,58,103,.22),0 0 0 2px #dbe4f3;
+  cursor:pointer;
+}
+.weight-row .wval-wrap{justify-content:flex-end;}
+.weight-row .wval-input{
+  width:72px;
+  text-align:center;
+  border:0;
+  border-radius:999px;
+  padding:10px 12px;
+  background:linear-gradient(135deg,#eafafb,#eef9fd);
+  color:#3b9fd0;
+  font-family:var(--sans);
+  font-size:18px;
+  font-weight:900;
+  box-shadow:inset 0 0 0 1px rgba(68,174,206,.08);
+}
+.weight-row .wval-input:focus{
+  outline:none;
+  background:#fff;
+  box-shadow:0 0 0 4px rgba(67,183,232,.13), inset 0 0 0 1px #43b7e8;
+}
+.weight-row.critical .wval-input{color:#3b9fd0;border:0;}
+.weight-row.critical input[type=range]{accent-color:unset;}
+@media(max-width:720px){
+  .weight-row{grid-template-columns:46px 1fr 78px;gap:12px;padding:15px;}
+  .weight-icon{width:44px;height:44px;border-radius:15px;font-size:21px;}
+  .weight-row .wlabel{font-size:15px;}
+  .weight-slider{grid-column:1 / -1;min-width:0;order:3;}
+  .weight-row .wval-input{width:68px;font-size:16px;padding:8px 10px;}
+}
+
+
+
+/* ── 네비바: 밥약 화면 상단바와 동일 구조/크기 ── */
+.navbar {
+    width: 100%; background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #E5E7EB;
+    padding: 0 1.25rem; height: 54px;
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 1000;
+}
+.navbar .back-btn {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: #F5F6FA; border: 1px solid #E5E7EB;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; color: #6B7280; font-size: 1rem;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.navbar .back-btn:hover { background: #E5E7EB; }
+.navbar .nav-title { font-size: 1rem; font-weight: 800; color: #111827; }
+.navbar .nav-title.home-link { text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+.navbar .nav-title.home-link:hover { color: #5B6EF5; }
+.navbar .tab-bar {
+    display: flex; gap: 0; margin-left: auto;
+    background: #F5F6FA; border-radius: 10px;
+    padding: 3px; border: 1px solid #E5E7EB;
+}
+.navbar .tab-btn {
+    flex: 0 0 auto; height: 26px; padding: 0 14px; border-radius: 8px; border: none;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: var(--sans); color: #6B7280;
+    background: none; transition: all 0.15s; white-space: nowrap;
+    text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:4px; line-height:1;
+}
+.navbar .tab-btn:hover { color: #111827; background: transparent; }
+.navbar .tab-btn.active { background: #FFFFFF; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.navbar .tab-btn.active.green { color: #15803D; }
+.navbar .tab-btn.active.amber { color: #92400E; }
+.navbar .tab-btn.active.blue { color: #4F6DF7; }
+.navbar .tab-btn.link-btn { text-decoration:none; display:inline-flex; align-items:center; gap:4px; }
+@media(max-width:620px){
+    .navbar{padding:0 .85rem;}
+    .navbar .tab-btn{height:26px;padding:0 9px;font-size:11px;}
+    .navbar .nav-title{font-size:.92rem;}
+}
+
+
+
+/* ===== NAVBAR FINAL FIX: meal/roommate same arrow and button size ===== */
+.navbar {
+    height: 54px !important;
+    padding: 0 1.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.navbar .back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: #F5F6FA !important;
+    border: 1px solid #E5E7EB !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: #6B7280 !important;
+    box-sizing: border-box !important;
+    flex: 0 0 32px !important;
+    line-height: 1 !important;
+}
+.navbar .back-btn .back-icon {
+    display: block !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 25px !important;
+    font-weight: 400 !important;
+    line-height: 25px !important;
+    height: 25px !important;
+    transform: translateY(-1px) !important;
+}
+.navbar .tab-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    margin-left: auto !important;
+    background: #F5F6FA !important;
+    border-radius: 10px !important;
+    padding: 3px !important;
+    border: 1px solid #E5E7EB !important;
+}
+.navbar .tab-btn {
+    flex: 0 0 auto !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    font-family: 'Pretendard', 'Nanum Gothic', sans-serif !important;
+    color: #6B7280 !important;
+    background: none !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+.navbar .tab-btn.active {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+.navbar .tab-btn.active.green { color: #15803D !important; }
+.navbar .tab-btn.active.amber { color: #92400E !important; }
+.navbar .tab-btn.active.blue { color: #4F6DF7 !important; }
+@media(max-width:620px){
+    .navbar{padding:0 .85rem !important;}
+    .navbar .tab-btn{height:26px !important;padding:0 9px !important;font-size:11px !important;}
+    .navbar .nav-title{font-size:.92rem !important;}
+}
+
 </style>
 </head>
 <body>
+
+<nav class="navbar">
+    <a href="/" class="back-btn"><span class="back-icon">‹</span></a>
+    <a href="/" class="nav-title home-link">🏠 캠퍼스메이트</a>
+    <div class="tab-bar">
+        <a class="tab-btn link-btn" href="/meal.html">🍚 밥약 신청</a>
+        <a class="tab-btn active blue link-btn" href="/roommate.html">🏠 룸메 찾기</a>
+    </div>
+</nav>
+
+
+
 <div class="wrapper">
 
 <header class="site-header">
   <div>
-    <h1>🏠 룸메이트 <span>매칭</span></h1>
-    <div class="subtitle">weighted-jaccard · primary-filter · redis-cache · hash[30]</div>
+    <h1>룸메이트 <span>매칭</span></h1>
+    <div class="subtitle">weighted-jaccard · primary-filter · redis-cache · hash[31]</div>
     <div class="server-status" style="margin-top:8px">
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">서버 연결 확인 중...</span>
     </div>
   </div>
   <div class="badge-row">
-    <span class="hbadge hbadge-blue">HASH SIZE: 30</span>
+    <span class="hbadge hbadge-blue">HASH SIZE: 31</span>
     <span class="hbadge hbadge-green">WEIGHTED JACCARD</span>
     <span class="hbadge hbadge-purple">FASTAPI BACKEND</span>
   </div>
@@ -401,13 +717,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div id="panel-table" class="panel">
   <div class="stats-row">
     <div class="stat-box"><div class="stat-num" id="stat-total">-</div><div class="stat-lbl">등록 인원</div></div>
-    <div class="stat-box"><div class="stat-num">30</div><div class="stat-lbl">슬롯 수</div></div>
+    <div class="stat-box"><div class="stat-num">31</div><div class="stat-lbl">슬롯 수</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-used">-</div><div class="stat-lbl">사용 슬롯</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-load">-</div><div class="stat-lbl">부하율</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-cache">-</div><div class="stat-lbl">캐시 항목</div></div>
   </div>
   <div class="card">
-    <div class="card-title">해시 테이블 현황 · Primary (슬롯 0–9) / Secondary (슬롯 10–29)</div>
+    <div class="card-title">해시 테이블 현황 · hash[31] 슬롯 0–30</div>
     <div class="hash-table-container">
       <div id="hash-table-view"><div class="loading">// 로딩 중...</div></div>
     </div>
@@ -434,34 +750,36 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <!-- 알고리즘 -->
 <div id="panel-algo" class="panel">
   <div class="card">
-    <div class="card-title">해시 함수</div>
+    <div class="card-title">해시 기반 매칭 과정</div>
     <div class="algo-box">
-      <strong>h(studentId)</strong> = Σ ( charCode[i] × 31 ) % 30<br><br>
-      다항 롤링 해시 — 소수 31의 거듭제곱을 각 문자에 곱해<br>
-      0~29 슬롯에 균등 분배합니다. 충돌은 Separate Chaining으로 처리.
+      <strong>① 해시 저장</strong><br>
+      사용자가 등록한 학번 문자열을 해시 함수에 넣어 <strong>hash[31]</strong>의 슬롯 중 하나에 저장합니다.<br>
+      <span class="formula">h = (h × 37 + charCode[i]) % 31</span><br><br>
+      테이블 크기는 소수인 31, 문자열 누적 multiplier는 37을 사용합니다.<br>
+      결과는 0번부터 30번 슬롯 중 하나가 되며, 같은 슬롯에 여러 사용자가 들어오면 Separate Chaining으로 연결합니다.
     </div>
-    <div class="card-title" style="margin-top:1rem">파티션 전략</div>
     <div class="algo-box">
-      <strong>Primary Filter</strong> : 본인 성별과 흡연 여부가 모두 같은 사용자만 후보로 통과<br>
-      <strong>Secondary Partition</strong> (슬롯 10–29) : 일반 성향 데이터<br><br>
-      Primary Filter 통과 후 생활 성향과 생활 시간대 기반 Secondary 유사도 계산 →<br>
-      전수 조사 대상을 대폭 축소하여 연산 부담 감소
+      <strong>② 1차 필터링</strong><br>
+      매칭 조회 시 모든 사용자를 바로 비교하지 않고, 먼저 <strong>성별과 흡연 여부가 모두 같은 사용자</strong>만 후보로 통과시킵니다.<br><br>
+      예: 내 정보가 남자/비흡연이면 남자/비흡연 사용자만 후보로 남고, 나머지는 유사도 계산 대상에서 제외됩니다.
     </div>
-    <div class="card-title" style="margin-top:1rem">가중 Jaccard 유사도</div>
     <div class="algo-box">
+      <strong>③ 2차 유사도 계산</strong><br>
+      1차 필터링을 통과한 후보를 대상으로 생활 성향 체크리스트, 평균 기상 시간, 평균 취침 시간을 비교합니다.<br><br>
       <span class="formula">score(A,B) = Σ w(t)·[t∈A∩B] / Σ w(t)·[t∈A∪B]</span><br><br>
-      각 성향 t에 가중치 w(t)를 곱해 중요 항목의 일치를 더 크게 반영.<br>
-      기본 Jaccard보다 사용자 만족도 높은 결과를 제공합니다.<br><br>
-      청결·공부 등 중요 성향은 최대 ×2.0까지 조정 · 나머지 기본 ×1.0<br>
-      결과값 ≥ 0.8 → 매칭 성공 판정<br><br>
-      <span style="color:var(--amber)">+ 기상/취침 시간 유사도 보정 · 흡연 여부는 절대 조건으로 동일한 사람끼리만 매칭</span>
+      청결·공부·조용한 환경처럼 사용자가 중요하게 보는 항목은 최대 ×2.0까지 가중치를 조정할 수 있습니다.
     </div>
-    <div class="card-title" style="margin-top:1rem">캐싱 전략</div>
     <div class="algo-box">
-      <strong>SET</strong> match:{sid} &lt;결과JSON&gt; TTL 60s<br><br>
-      캐시 HIT  → O(1) 즉시 반환 (ms 단위 응답)<br>
-      캐시 MISS → Primary Filter → Weighted Jaccard → SET 저장<br>
-      TTL 60초 후 자동 만료 → 새 등록자 자동 반영
+      <strong>④ 캐시 확인</strong><br>
+      같은 학번으로 반복 조회할 경우, 먼저 캐시에 저장된 매칭 결과를 확인합니다.<br><br>
+      <strong>Cache HIT</strong> → 저장된 결과 즉시 반환<br>
+      <strong>Cache MISS</strong> → 후보 필터링과 유사도 계산 후 <strong>match:{sid}</strong> 형태로 결과 저장<br>
+      TTL 60초 후 자동 만료되어 새 등록자가 반영될 수 있습니다.
+    </div>
+    <div class="algo-box">
+      <strong>⑤ 정렬 및 출력</strong><br>
+      계산된 후보는 유사도 높은 순서로 정렬합니다.<br><br>
+      유사도 <strong>80% 이상</strong>인 후보는 모두 출력하고, 80% 미만 후보는 참고용으로 상위 3명까지만 추가 출력합니다.
     </div>
   </div>
   <div class="card">
@@ -718,12 +1036,13 @@ function renderWeightRows() {
     rendered.add(keyStr);
     const w        = localWeights[meta.keys[0]] ?? 1.0;
     const sliderV  = Math.round(w * 10);
+    const progress = Math.max(0, Math.min(100, (w - 1.0) * 100));
     const critCls  = meta.critical ? ' critical' : '';
-    const accentColor = meta.critical ? 'var(--red)' : 'var(--amber)';
     html += `<div class="weight-row${critCls}">
+      <div class="weight-icon">${TRAIT_ICONS[meta.keys[0]] || '✨'}</div>
       <span class="wlabel">${meta.label}</span>
-      <input type="range" min="10" max="20" step="1" value="${sliderV}"
-        style="flex:1;max-width:130px;accent-color:${accentColor}"
+      <input class="weight-slider" type="range" min="10" max="20" step="1" value="${sliderV}"
+        style="--pct:${progress}%"
         oninput="onSlider('${keyStr}',this.value,this)"/>
       <div class="wval-wrap">
         <input class="wval-input" value="×${w.toFixed(1)}"
@@ -741,7 +1060,7 @@ async function onSlider(keyStr, rawVal, input) {
   const w    = parseFloat(rawVal) / 10;
   keys.forEach(k => { localWeights[k] = w; });
   const row  = input.closest('.weight-row');
-  if (row) { const inp = row.querySelector('.wval-input'); if(inp) inp.value = '×' + w.toFixed(1); }
+  if (row) { const inp = row.querySelector('.wval-input'); if(inp) inp.value = '×' + w.toFixed(1); input.style.setProperty('--pct', Math.max(0, Math.min(100, (w - 1.0) * 100)) + '%'); }
   updateCheckBadges(keys, w);
   await syncWeights(keys, w);
 }
@@ -971,7 +1290,7 @@ async function loadTableTab() {
     data.slots.forEach(slot => {
       slot.users.forEach(u => {
         rows += `<tr>
-          <td><span class="slot-badge">[${slot.slot}]</span>${slot.partition === 'Primary' ? '<span class="pf-tag">Primary</span>' : ''}</td>
+          <td><span class="slot-badge">[${slot.slot}]</span></td>
           <td class="sid-code">${maskSid(u.sid)}</td>
           <td>${u.chain_index > 0 ? '<span class="chain-dot" title="체이닝"></span>' : ''}${escapeHtml(u.name)}</td>
           <td style="color:var(--text2)">${escapeHtml(u.dept || '-')}</td>

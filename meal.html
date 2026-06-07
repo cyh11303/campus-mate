@@ -43,6 +43,8 @@
         }
         .back-btn:hover { background: var(--border); }
         .nav-title { font-size: 1rem; font-weight: 800; color: var(--text); }
+        .nav-title.home-link { text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+        .nav-title.home-link:hover { color: var(--primary); }
 
         /* ── 탭 ── */
         .tab-bar {
@@ -51,14 +53,17 @@
             padding: 3px; border: 1px solid var(--border);
         }
         .tab-btn {
-            padding: 5px 14px; border-radius: 8px; border: none;
+            height: 26px; padding: 0 14px; border-radius: 8px; border: none;
             font-size: 12px; font-weight: 700; cursor: pointer;
             font-family: 'Pretendard', sans-serif; color: var(--text-sub);
             background: none; transition: all 0.15s; white-space: nowrap;
+            display:inline-flex; align-items:center; justify-content:center; gap:4px; line-height:1;
         }
         .tab-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
         .tab-btn.active.green { color: var(--green-dark); }
         .tab-btn.active.amber { color: #92400E; }
+        .tab-btn.active.blue { color: #4F6DF7; }
+        .tab-btn.link-btn { text-decoration:none; display:inline-flex; align-items:center; gap:4px; }
 
         /* ── 본문 ── */
         .wrap { width: 100%; max-width: 680px; padding: 1.25rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -210,16 +215,101 @@
         @media(max-width:480px) {
             .form-row-2 { grid-template-columns:1fr; }
         }
-    </style>
+    
+
+/* ===== NAVBAR FINAL FIX: meal/roommate same arrow and button size ===== */
+.navbar {
+    height: 54px !important;
+    padding: 0 1.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.navbar .back-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: #F5F6FA !important;
+    border: 1px solid #E5E7EB !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: #6B7280 !important;
+    box-sizing: border-box !important;
+    flex: 0 0 32px !important;
+    line-height: 1 !important;
+}
+.navbar .back-btn .back-icon {
+    display: block !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 25px !important;
+    font-weight: 400 !important;
+    line-height: 25px !important;
+    height: 25px !important;
+    transform: translateY(-1px) !important;
+}
+.navbar .tab-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    margin-left: auto !important;
+    background: #F5F6FA !important;
+    border-radius: 10px !important;
+    padding: 3px !important;
+    border: 1px solid #E5E7EB !important;
+}
+.navbar .tab-btn {
+    flex: 0 0 auto !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    font-family: 'Pretendard', 'Nanum Gothic', sans-serif !important;
+    color: #6B7280 !important;
+    background: none !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+.navbar .tab-btn.active {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+.navbar .tab-btn.active.green { color: #15803D !important; }
+.navbar .tab-btn.active.amber { color: #92400E !important; }
+.navbar .tab-btn.active.blue { color: #4F6DF7 !important; }
+@media(max-width:620px){
+    .navbar{padding:0 .85rem !important;}
+    .navbar .tab-btn{height:26px !important;padding:0 9px !important;font-size:11px !important;}
+    .navbar .nav-title{font-size:.92rem !important;}
+}
+
+</style>
 </head>
 <body>
 
     <nav class="navbar">
-        <a href="/" class="back-btn">‹</a>
-        <span class="nav-title">밥약 신청</span>
+        <a href="/" class="back-btn"><span class="back-icon">‹</span></a>
+        <a href="/" class="nav-title home-link">🏠 캠퍼스메이트</a>
         <div class="tab-bar">
             <button class="tab-btn active green" onclick="switchTab('meal', this)">🍚 밥약 신청</button>
-            <button class="tab-btn amber"        onclick="switchTab('gallery', this)">🖼️ 갤러리</button>
+            <a class="tab-btn link-btn" href="/roommate.html">🏠 룸메 찾기</a>
+            <button class="tab-btn amber" onclick="switchTab('gallery', this)">🖼️ 갤러리</button>
         </div>
     </nav>
 
