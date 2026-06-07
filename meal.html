@@ -116,6 +116,45 @@
         .action-btn.amber:hover { background: #D97706; transform:translateY(-1px); box-shadow:0 4px 12px rgba(245,158,11,0.3); }
         .action-btn:disabled { background: var(--border); color: var(--text-sub); cursor:not-allowed; transform:none; box-shadow:none; }
 
+
+        /* ── 신청자 기본 프로필 아이콘 ── */
+        .applicant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EEF2F7, #E5E7EB);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid #D1D5DB;
+        }
+        .profile-icon {
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+        .profile-head {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #9CA3AF;
+            position: absolute;
+            top: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .profile-body {
+            width: 18px;
+            height: 9px;
+            border-radius: 999px 999px 7px 7px;
+            background: #9CA3AF;
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
         /* ── 신청자 목록 ── */
         .list-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
         .count-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
@@ -594,7 +633,13 @@
                     const plannedBadge = plannedCount > 0 ? `<span class="planned-badge">밥약 예정 ${plannedCount}명</span>` : '';
                     return `
                     <div class="applicant-item">
-                        <div class="applicant-info">
+                            <div class="applicant-avatar">
+                        <div class="profile-icon">
+                            <div class="profile-head"></div>
+                            <div class="profile-body"></div>
+                        </div>
+                    </div>
+                <div class="applicant-info">
                             <div class="applicant-name">${escapeHtml(item.name)}</div>
                             <div class="applicant-meta">${maskStudentId(item.studentId)}</div>
                         </div>
