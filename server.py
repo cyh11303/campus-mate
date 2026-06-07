@@ -8,7 +8,7 @@
 - 밥약 인증 갤러리 API (파일 업로드)
 """
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -19,6 +19,7 @@ import os
 import uuid
 import sqlite3
 import json
+import hashlib
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOADS_DIR = os.environ.get("UPLOADS_DIR", os.path.join(BASE_DIR, "uploads"))
@@ -98,6 +99,7 @@ def init_db():
                 image_url TEXT NOT NULL,
                 yummy INTEGER DEFAULT 0,
                 where_count INTEGER DEFAULT 0,
+                delete_password_hash TEXT DEFAULT '',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -202,6 +204,19 @@ def row_to_post(row: sqlite3.Row) -> dict:
         },
     }
 
+
+
+def hash_delete_password(password: str) -> str:
+    """갤러리 게시글 삭제 비밀번호 4자리를 SHA-256으로 해시한다."""
+    return hashlib.sha256(str(password).encode("utf-8")).hexdigest()
+
+def validate_delete_password(password: str):
+    if not isinstance(password, str) or not re_fullmatch_4digit(password):
+        raise HTTPException(status_code=400, detail="삭제 비밀번호는 숫자 4자리여야 합니다.")
+
+def re_fullmatch_4digit(value: str) -> bool:
+    return len(value) == 4 and value.isdigit()
+
 # ══════════════════════════════════════════════════════════════════════════════
 # 해시 테이블 (Separate Chaining, SIZE=31)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -283,7 +298,6 @@ TRAITS_META = [
     {"key": "drink",      "label": "애주가",       "weight": 1.0},
     {"key": "game",       "label": "게임/취미",    "weight": 1.0},
     {"key": "share",      "label": "물건 공유 OK", "weight": 1.0},
-    {"key": "guest",      "label": "손님 초대 OK", "weight": 1.0},
     {"key": "fashion",    "label": "패션",         "weight": 1.0},
     {"key": "boardgame",  "label": "보드게임",     "weight": 1.0},
     {"key": "gym",        "label": "헬스",         "weight": 1.0},
@@ -1232,8 +1246,12 @@ async def gallery_upload(
     name: str = Form(...),
     menu: str = Form(...),
     tags: str = Form(""),
+    deletePassword: str = Form(...),
     image: UploadFile = File(...),
 ):
+    validate_delete_password(deletePassword)
+    delete_password_hash = hash_delete_password(deletePassword)
+
     ext = os.path.splitext(image.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="jpg/png/gif/webp 파일만 업로드 가능합니다.")
@@ -1254,10 +1272,10 @@ async def gallery_upload(
     with get_conn() as conn:
         conn.execute(
             """
-            INSERT INTO gallery_posts (id, name, menu, tags, image_url, yummy, where_count)
-            VALUES (?, ?, ?, ?, ?, 0, 0)
+            INSERT INTO gallery_posts (id, name, menu, tags, image_url, yummy, where_count, delete_password_hash)
+            VALUES (?, ?, ?, ?, ?, 0, 0, ?)
             """,
-            (post_id, name.strip(), menu.strip(), json.dumps(tag_list, ensure_ascii=False), image_url),
+            (post_id, name.strip(), menu.strip(), json.dumps(tag_list, ensure_ascii=False), image_url, delete_password_hash),
         )
         row = conn.execute("SELECT * FROM gallery_posts WHERE id = ?", (post_id,)).fetchone()
         conn.commit()
@@ -1272,11 +1290,20 @@ def gallery_list():
     return [row_to_post(row) for row in rows]
 
 @app.delete("/api/gallery/{post_id}")
-def gallery_delete(post_id: str):
+def gallery_delete(post_id: str, payload: dict = Body(...)):
+    delete_password = str(payload.get("deletePassword", "")).strip()
+    validate_delete_password(delete_password)
+
     with get_conn() as conn:
         row = conn.execute("SELECT * FROM gallery_posts WHERE id = ?", (post_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="게시글이 없습니다.")
+
+        saved_hash = row["delete_password_hash"] if "delete_password_hash" in row.keys() else ""
+        if not saved_hash:
+            raise HTTPException(status_code=403, detail="비밀번호가 없는 기존 게시글은 삭제할 수 없습니다.")
+        if saved_hash != hash_delete_password(delete_password):
+            raise HTTPException(status_code=403, detail="삭제 비밀번호가 일치하지 않습니다.")
 
         filename = row["image_url"].split("/")[-1]
         file_path = os.path.join(UPLOADS_DIR, filename)

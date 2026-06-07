@@ -779,7 +779,7 @@ body{background:var(--bg);color:var(--text);}
     <div class="algo-box">
       <strong>⑤ 정렬 및 출력</strong><br>
       계산된 후보는 유사도 높은 순서로 정렬합니다.<br><br>
-      유사도 <strong>80% 이상</strong>인 후보는 모두 출력하고, 80% 미만 후보는 참고용으로 상위 3명까지만 추가 출력합니다.
+      유사도 <strong>추천 기준</strong>인 후보는 모두 출력하고, 80% 미만 후보는 참고용으로 상위 3명까지만 추가 출력합니다.
     </div>
   </div>
   <div class="card">
@@ -821,7 +821,7 @@ const API = window.location.origin;
 const TRAIT_ICONS = {
   quiet:'🔇', social:'🤝', clean:'✨',
   eat_out:'🍽️', drink:'🍺', study:'📚', game:'🎮', share:'🔄',
-  guest:'🚪', fashion:'👗', boardgame:'🎲', gym:'🏋️', soccer:'⚽',
+  fashion:'👗', boardgame:'🎲', gym:'🏋️', soccer:'⚽',
   beauty:'💄', foodie:'🗺️',
 };
 
@@ -834,7 +834,6 @@ const WEIGHT_ROW_META = [
   { keys:['drink'],    label:'🍺 애주가' },
   { keys:['game'],     label:'🎮 게임/취미' },
   { keys:['share'],    label:'🔄 물건 공유 OK' },
-  { keys:['guest'],    label:'🚪 손님 초대 OK' },
   { keys:['fashion'],  label:'👗 패션' },
   { keys:['boardgame'],label:'🎲 보드게임' },
   { keys:['gym'],      label:'🏋️ 헬스' },
@@ -1213,7 +1212,7 @@ function renderResults(data) {
   const SLEEP_LABELS = {22:'22시↑',23:'23시',24:'0시',25:'1시',26:'2시',27:'3시↓'};
 
   let html = `<div class="match-section-label">
-    ${escapeHtml(me.name)}님 · 슬롯[${slot}] · 80% 이상 ${high.length}명 · 추가 후보 최대 3명
+    ${escapeHtml(me.name)}님 · 슬롯[${slot}] · 추천 기준 ${high.length}명 · 추가 후보 확인
     <span class="cache-badge ${isHit ? 'cb-hit' : 'cb-miss'}">${isHit ? '⚡ CACHE HIT' : '✓ DB SCAN'}</span>
     <span class="ms-badge">${elapsed_ms}ms</span>
   </div>`;
