@@ -118,6 +118,12 @@ def init_db():
         if "contact_detail" not in cols:
             conn.execute("ALTER TABLE users ADD COLUMN contact_detail TEXT DEFAULT ''")
 
+        # 기존 Railway SQLite DB에 이미 gallery_posts 테이블이 있는 경우,
+        # CREATE TABLE IF NOT EXISTS만으로는 새 컬럼이 추가되지 않으므로 직접 보정한다.
+        gallery_cols = [r[1] for r in conn.execute("PRAGMA table_info(gallery_posts)").fetchall()]
+        if "delete_password_hash" not in gallery_cols:
+            conn.execute("ALTER TABLE gallery_posts ADD COLUMN delete_password_hash TEXT DEFAULT ''")
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS roommate_requests (
                 id TEXT PRIMARY KEY,
