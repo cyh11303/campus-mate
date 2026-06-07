@@ -428,6 +428,12 @@
                     <input class="input-field amber" type="text" id="g-tags" placeholder="쉼표로 구분 예: 쪽문맛집, 학식, 혼밥탈출">
                     <div class="tag-hint">태그를 달면 다른 학우들이 쉽게 찾을 수 있어요</div>
                 </div>
+
+                <div class="input-group">
+                    <label class="input-label">🔒 삭제 비밀번호 4자리</label>
+                    <input class="input-field amber" type="password" id="g-delete-password" placeholder="삭제할 때 사용할 숫자 4자리" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+                    <div class="tag-hint">게시글 삭제 시 같은 4자리 비밀번호를 입력해야 삭제됩니다</div>
+                </div>
                 <button class="action-btn amber" id="upload-btn" onclick="uploadPost()">📸&nbsp; 인증샷 올리기</button>
             </div>
 
@@ -488,9 +494,22 @@
         }
 
         // ── 토스트 ──
+        function normalizeErrorMessage(msg) {
+            if (typeof msg === 'string') return msg;
+            if (Array.isArray(msg)) {
+                return msg.map(item => {
+                    if (typeof item === 'string') return item;
+                    if (item && typeof item === 'object') return item.msg || item.detail || JSON.stringify(item);
+                    return String(item);
+                }).join(' / ');
+            }
+            if (msg && typeof msg === 'object') return msg.detail || msg.msg || JSON.stringify(msg);
+            return String(msg ?? '');
+        }
+
         function toast(id, msg, ok) {
             const el = document.getElementById(id);
-            el.textContent = (ok ? '✓  ' : '✗  ') + msg;
+            el.textContent = (ok ? '✓  ' : '✗  ') + normalizeErrorMessage(msg);
             el.className = 'toast ' + (ok ? 'ok' : 'err');
             setTimeout(() => { el.className = 'toast'; }, 3000);
         }
@@ -737,11 +756,13 @@
             const name = document.getElementById('g-name').value.trim();
             const menu = document.getElementById('g-menu').value.trim();
             const tags = document.getElementById('g-tags').value.trim();
+            const deletePassword = document.getElementById('g-delete-password').value.trim();
             const file = document.getElementById('image-input').files[0];
 
             if (!file) return toast('toast-gallery','사진을 선택해주세요',false);
             if (!name) return toast('toast-gallery','이름을 입력해주세요',false);
             if (!menu) return toast('toast-gallery','메뉴를 입력해주세요',false);
+            if (!/^\d{4}$/.test(deletePassword)) return toast('toast-gallery','삭제 비밀번호는 숫자 4자리로 입력해주세요',false);
 
             const btn = document.getElementById('upload-btn');
             btn.disabled = true; btn.textContent = '업로드 중...';
@@ -751,6 +772,7 @@
             form.append('menu',  menu);
             form.append('tags',  tags);
             form.append('image', file);
+            form.append('deletePassword', deletePassword);
 
             try {
                 const res  = await fetch(`${API_BASE}/api/gallery`, { method:'POST', body:form });
@@ -758,9 +780,9 @@
                 if (res.ok) {
                     toast('toast-gallery','게시글이 올라갔어요! 🎉',true);
                     removePreview();
-                    ['g-name','g-menu','g-tags'].forEach(id => document.getElementById(id).value = '');
+                    ['g-name','g-menu','g-tags','g-delete-password'].forEach(id => document.getElementById(id).value = '');
                     fetchGallery();
-                } else { toast('toast-gallery', data.detail||'업로드 실패', false); }
+                } else { toast('toast-gallery', data.detail || data.message || '업로드 실패', false); }
             } catch { toast('toast-gallery','서버 연결 실패',false); }
             finally { btn.disabled = false; btn.innerHTML = '📸&nbsp; 인증샷 올리기'; }
         }
@@ -832,9 +854,25 @@
         }
 
         async function deletePost(postId) {
-            if (!confirm('이 게시글을 삭제할까요?')) return;
-            try { await fetch(`${API_BASE}/api/gallery/${postId}`, { method:'DELETE' }); fetchGallery(); }
-            catch { toast('toast-gallery','삭제 실패',false); }
+            const deletePassword = prompt('게시글 삭제 비밀번호 4자리를 입력해주세요.');
+            if (deletePassword === null) return;
+            if (!/^\d{4}$/.test(deletePassword.trim())) {
+                return toast('toast-gallery','삭제 비밀번호는 숫자 4자리로 입력해주세요',false);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/gallery/${postId}`, {
+                    method:'DELETE',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ deletePassword: deletePassword.trim() })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) return toast('toast-gallery', data.detail || data.message || '삭제 실패', false);
+                toast('toast-gallery','게시글이 삭제되었습니다',true);
+                fetchGallery();
+            } catch {
+                toast('toast-gallery','삭제 실패',false);
+            }
         }
 
         document.getElementById('request-student-id').addEventListener('input', (e) => {
