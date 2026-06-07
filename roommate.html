@@ -767,7 +767,7 @@ body{background:var(--bg);color:var(--text);}
       <strong>③ 2차 유사도 계산</strong><br>
       1차 필터링을 통과한 후보를 대상으로 생활 성향 체크리스트, 평균 기상 시간, 평균 취침 시간을 비교합니다.<br><br>
       <span class="formula">score(A,B) = Σ w(t)·[t∈A∩B] / Σ w(t)·[t∈A∪B]</span><br><br>
-      청결·공부·조용한 환경처럼 사용자가 중요하게 보는 항목은 최대 ×2.0까지 가중치를 조정할 수 있습니다.
+      청결·공부·조용한 환경처럼 사용자가 중요하게 보는 항목은 최대 ×1.5까지 가중치를 조정할 수 있습니다.
     </div>
     <div class="algo-box">
       <strong>④ 캐시 확인</strong><br>
@@ -1036,17 +1036,17 @@ function renderWeightRows() {
     rendered.add(keyStr);
     const w        = localWeights[meta.keys[0]] ?? 1.0;
     const sliderV  = Math.round(w * 10);
-    const progress = Math.max(0, Math.min(100, (w - 1.0) * 100));
+    const progress = Math.max(0, Math.min(100, ((w - 1.0) / 0.5) * 100));
     const critCls  = meta.critical ? ' critical' : '';
     html += `<div class="weight-row${critCls}">
       <div class="weight-icon">${TRAIT_ICONS[meta.keys[0]] || '✨'}</div>
       <span class="wlabel">${meta.label}</span>
-      <input class="weight-slider" type="range" min="10" max="20" step="1" value="${sliderV}"
+      <input class="weight-slider" type="range" min="10" max="15" step="1" value="${sliderV}"
         style="--pct:${progress}%"
         oninput="onSlider('${keyStr}',this.value,this)"/>
       <div class="wval-wrap">
         <input class="wval-input" value="×${w.toFixed(1)}"
-          title="클릭하여 직접 입력 (1.0 ~ 2.0)"
+          title="클릭하여 직접 입력 (1.0 ~ 1.5)"
           onblur="onWeightInput('${keyStr}',this)"
           onkeydown="if(event.key==='Enter')onWeightInput('${keyStr}',this)"/>
       </div>
@@ -1060,7 +1060,7 @@ async function onSlider(keyStr, rawVal, input) {
   const w    = parseFloat(rawVal) / 10;
   keys.forEach(k => { localWeights[k] = w; });
   const row  = input.closest('.weight-row');
-  if (row) { const inp = row.querySelector('.wval-input'); if(inp) inp.value = '×' + w.toFixed(1); input.style.setProperty('--pct', Math.max(0, Math.min(100, (w - 1.0) * 100)) + '%'); }
+  if (row) { const inp = row.querySelector('.wval-input'); if(inp) inp.value = '×' + w.toFixed(1); input.style.setProperty('--pct', Math.max(0, Math.min(100, ((w - 1.0) / 0.5) * 100)) + '%'); }
   updateCheckBadges(keys, w);
   await syncWeights(keys, w);
 }
@@ -1069,7 +1069,7 @@ async function onWeightInput(keyStr, inputEl) {
   const keys = keyStr.split(',');
   let w = parseFloat(inputEl.value.replace(/[×x\s]/g, ''));
   if (isNaN(w) || w < 1.0) w = 1.0;
-  if (w > 2.0) w = 2.0;
+  if (w > 1.5) w = 1.5;
   w = Math.round(w * 10) / 10;
   inputEl.value = '×' + w.toFixed(1);
   keys.forEach(k => { localWeights[k] = w; });
