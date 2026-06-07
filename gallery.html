@@ -279,7 +279,7 @@
             </div>
 
             <div class="input-group" style="margin-bottom:0.85rem">
-                <label class="input-label">🔒 삭제 비밀번호</label>
+                <label class="input-label">🔒 삭제 비밀번호 4자리</label>
                 <input class="input-field" type="password" id="g-delete-password" placeholder="삭제할 때 사용할 숫자 4자리" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
                 <div class="tag-hint">게시글 삭제 시 같은 4자리 비밀번호를 입력해야 삭제됩니다</div>
             </div>
@@ -341,9 +341,26 @@
         });
 
         // ── 토스트 ──────────────────────────────────────────────────────────
+        function normalizeErrorMessage(msg) {
+            if (typeof msg === 'string') return msg;
+            if (Array.isArray(msg)) {
+                return msg.map(item => {
+                    if (typeof item === 'string') return item;
+                    if (item && typeof item === 'object') {
+                        return item.msg || item.detail || JSON.stringify(item);
+                    }
+                    return String(item);
+                }).join(' / ');
+            }
+            if (msg && typeof msg === 'object') {
+                return msg.detail || msg.msg || JSON.stringify(msg);
+            }
+            return String(msg ?? '');
+        }
+
         function showToast(msg, ok) {
             const el = document.getElementById('toast');
-            el.textContent = (ok ? '✓  ' : '✗  ') + msg;
+            el.textContent = (ok ? '✓  ' : '✗  ') + normalizeErrorMessage(msg);
             el.className = 'toast ' + (ok ? 'ok' : 'err');
             setTimeout(() => { el.className = 'toast'; }, 3000);
         }
@@ -384,7 +401,7 @@
                     document.getElementById('g-delete-password').value = '';
                     fetchGallery();
                 } else {
-                    showToast(data.detail || '업로드 실패', false);
+                    showToast(data.detail || data.message || '업로드 실패', false);
                 }
             } catch {
                 showToast('서버 연결 실패', false);
